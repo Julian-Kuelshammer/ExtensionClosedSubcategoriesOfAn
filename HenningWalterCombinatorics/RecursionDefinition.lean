@@ -3,6 +3,7 @@ import Mathlib.Algebra.BigOperators.Intervals
 import Mathlib.Data.Nat.SuccPred
 import Mathlib.Order.Interval.Finset.Nat
 import Mathlib.Tactic.Linarith
+import Mathlib.Tactic
 
 /-! # Definition of the recursive functions.
 
@@ -124,6 +125,38 @@ lemma b_succ_succ (n k : ℕ) :
   simpa [a, b, ab] using Finset.sum_attach _
     (fun x => ∑ r ∈ Finset.Icc 0 (min x k),
       (ab (x - 1)).1 r * ∑ q ∈ Finset.Icc (k - r) (n - x + 1), (ab (n - x)).2 q)
+
+lemma ab_triangular_shape (n : ℕ) :
+∀ k, n + 2 ≤ k → a n k = 0 ∧ b n k = 0 := by
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+  intro k hk
+  rcases n with ( _ | n ) <;> rcases k with ( _ | k ) <;> all_goals try simp; omega
+  · cases k <;> simp; omega
+  · have caseb : b (n + 1) (k + 1) = 0 := by
+      rw [b_succ_succ, (ih n (by omega) k (by omega)).1, zero_add, Finset.sum_eq_zero]
+      · rw [zero_add, Finset.sum_eq_zero]
+        intro m _
+        rw [Finset.sum_eq_zero]
+        intro r _
+        apply mul_eq_zero_of_right
+        rw [Finset.sum_eq_zero]
+        intro q _
+        grind
+      intro m _
+      grind
+    refine ⟨?_, caseb⟩
+    · rw [a_succ_succ, caseb, zero_add, (ih n (by omega) (k + 1) (by omega)).2, zero_add,
+        Finset.sum_eq_zero]
+      intro m _
+      apply mul_eq_zero_of_left
+      grind
+
+lemma a_triangular_shape (n k : ℕ) (hk : n + 2 ≤ k) : a n k = 0 := by
+  exact (ab_triangular_shape n k hk).1
+
+lemma b_triangular_shape (n k : ℕ) (hk : n + 2 ≤ k) : b n k = 0 := by
+  exact (ab_triangular_shape n k hk).2
 
 /- Here are the first 7 values of A(n)=a(n+1,0). Note that eval doesn't come with the same
 correctness insurances as the proofs above. More values are possible, but it is not an efficient
