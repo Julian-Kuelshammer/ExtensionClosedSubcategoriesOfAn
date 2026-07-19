@@ -2,8 +2,6 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Algebra.BigOperators.Intervals
 import Mathlib.Data.Nat.SuccPred
 import Mathlib.Order.Interval.Finset.Nat
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic
 
 /-! # Definition of the recursive functions.
 
