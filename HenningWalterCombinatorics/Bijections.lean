@@ -99,9 +99,7 @@ lemma max_le_min_add_one_iff_max_add_max_le_succ {n : ℕ} (p q : higher_nakayam
   rcases p with ⟨⟨a,b⟩, hp⟩
   rcases q with ⟨⟨c,d⟩, hq⟩
   rw [mem_higher_nakayama_convention_iff] at hp hq
-  simp only [hn_equiv_mc]
-  change max a c ≤ 1 + min b d ↔
-    max (n - b) (n - d) + max a c ≤ n + 1
+  change max a c ≤ 1 + min b d ↔ max (n - b) (n - d) + max a c ≤ n + 1
   omega
 
 lemma max_le_min_add_one_iff {n : ℕ} (p q : intervall_modules_convention n) :
@@ -111,7 +109,5 @@ lemma max_le_min_add_one_iff {n : ℕ} (p q : intervall_modules_convention n) :
   rcases p with ⟨⟨a,b⟩, hp⟩
   rcases q with ⟨⟨c,d⟩, hq⟩
   rw [mem_intervall_modules_convention_iff] at hp hq
-  simp only [iv_equiv_hn]
-  change max a c ≤ 1 + min b d ↔
-    max (n + 1 - b) (n + 1 - d) ≤ 1 + min (n + 1 - a) (n + 1 - c)
+  change max a c ≤ 1 + min b d ↔ max (n + 1 - b) (n + 1 - d) ≤ 1 + min (n + 1 - a) (n + 1 - c)
   omega
