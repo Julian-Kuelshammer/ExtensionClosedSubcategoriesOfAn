@@ -45,7 +45,7 @@ namespace RecursiveArrays
 
 /--
 The "rows" of `a` and `b`, constructed simultaneously. What we define here is the function `ab  '
-which is given by `r(n)=(a(n,-), b(n,-))`. The expression `Finset.Icc l m` denotes the interval
+which is given by `ab(n)=(a(n,-), b(n,-))`. The expression `Finset.Icc l m` denotes the interval
 (within the natural numbers `l` and `m`.)
 -/
 def ab : ℕ → (ℕ → ℕ) × (ℕ → ℕ)

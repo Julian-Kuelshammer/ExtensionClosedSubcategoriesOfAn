@@ -1,5 +1,6 @@
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Finset.Prod
+import Mathlib.Tactic.Zify
 
 /-! # Bijections between different conventions for the indexing set of intervall modules.
 
@@ -37,7 +38,7 @@ lemma mem_mazorchuk_convention_iff (n : ℕ) (p : ℕ × ℕ) :
   simp only [mazorchuk_convention, product_eq_sprod, mem_filter, mem_product, mem_range]
   omega
 
-def intervall_equiv_nakayama (n : ℕ) :
+def iv_equiv_hn {n : ℕ} :
   ↥ (intervall_modules_convention n) ≃ ↥ (higher_nakayama_convention n) :=
     { toFun := fun p ↦ ⟨(n + 1 - p.1.2, n + 1 - p.1.1), by
         rcases p with ⟨p,hp⟩
@@ -65,7 +66,7 @@ def intervall_equiv_nakayama (n : ℕ) :
         omega
     }
 
-def nakayama_equiv_mazorchuk (n : ℕ) :
+def hn_equiv_mc {n : ℕ} :
   ↥ (higher_nakayama_convention n) ≃ ↥ (mazorchuk_convention n) :=
   { toFun := fun p ↦ ⟨(p.1.1, n - p.1.2), by
       rcases p with ⟨p,hp⟩
@@ -90,3 +91,27 @@ def nakayama_equiv_mazorchuk (n : ℕ) :
       ext <;>
       omega
   }
+
+lemma max_le_min_add_one_iff_max_add_max_le_succ {n : ℕ} (p q : higher_nakayama_convention n) :
+  max p.1.1 q.1.1 ≤ 1 + min p.1.2 q.1.2 ↔
+  max (hn_equiv_mc p).1.2 (hn_equiv_mc q).1.2 + max (hn_equiv_mc p).1.1 (hn_equiv_mc q).1.1
+    ≤ n + 1 := by
+  rcases p with ⟨⟨a,b⟩, hp⟩
+  rcases q with ⟨⟨c,d⟩, hq⟩
+  rw [mem_higher_nakayama_convention_iff] at hp hq
+  simp only [hn_equiv_mc]
+  change max a c ≤ 1 + min b d ↔
+    max (n - b) (n - d) + max a c ≤ n + 1
+  omega
+
+lemma max_le_min_add_one_iff {n : ℕ} (p q : intervall_modules_convention n) :
+  max p.1.1 q.1.1 ≤ 1 + min p.1.2 q.1.2 ↔
+    max (iv_equiv_hn p).1.1 (iv_equiv_hn q).1.1 ≤
+      1 + min (iv_equiv_hn p).1.2 (iv_equiv_hn q).1.2 := by
+  rcases p with ⟨⟨a,b⟩, hp⟩
+  rcases q with ⟨⟨c,d⟩, hq⟩
+  rw [mem_intervall_modules_convention_iff] at hp hq
+  simp only [iv_equiv_hn]
+  change max a c ≤ 1 + min b d ↔
+    max (n + 1 - b) (n + 1 - d) ≤ 1 + min (n + 1 - a) (n + 1 - c)
+  omega
