@@ -2,6 +2,8 @@ import HenningWalterCombinatorics.ExtensionClosed
 import Mathlib.Data.Finset.Powerset
 import Mathlib.Data.Fintype.Card
 import Mathlib.Data.Finset.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+
 
 instance {n : ℕ} (p q : higher_nakayama_convention n) : Decidable (ext_interlace p q) := by
   unfold ext_interlace
@@ -81,14 +83,51 @@ lemma card_ext_closed_sets_with_specified_number_projectives_zero_one :
   card_ext_closed_sets_with_specified_number_projectives 0 1 = 1 := by
   decide
 
+def projectives_in_univ (n : ℕ) :
+  Fin (n + 1) ≃
+    ((Finset.univ : Finset (higher_nakayama_convention n)).filter (fun p => p.1.1 = 0)) :=
+  { toFun := fun i ↦ ⟨⟨(0,i), by grind [mem_higher_nakayama_convention_iff]⟩, by simp⟩
+    invFun := fun p ↦ ⟨p.1.1.2, by grind [mem_higher_nakayama_convention_iff]⟩
+    left_inv := by grind
+    right_inv := by grind
+  }
+
+lemma cardinality_projectives_in_univ (n : ℕ) :
+  ((Finset.univ : Finset (higher_nakayama_convention n)).filter (fun p => p.1.1 = 0)).card
+    = n + 1 := by
+  simpa only [Fintype.card_fin, Fintype.card_coe] using
+    (Fintype.card_congr (projectives_in_univ n)).symm
+
 /-- $\mathcal{R}(n)_k$ and $\mathcal{R}(n)_l$ are disjoint. -/
-lemma disjoint_with_specified_projectives_of_number_projectives_differs {n k l : ℕ} (h : k ≠ l) : Disjoint
-    (ext_closed_sets_with_specified_number_projectives n k)
+lemma disjoint_with_specified_projectives_of_number_projectives_differs {n k l : ℕ} (h : k ≠ l) :
+  Disjoint (ext_closed_sets_with_specified_number_projectives n k)
     (ext_closed_sets_with_specified_number_projectives n l) := by
-  rw [Finset.disjoint_left]
+  rw [disjoint_left]
   intro Y hk hl
   simp only [ext_closed_sets_with_specified_number_projectives, mem_filter] at hk hl
   omega
+
+/-- $\mathcal{R}(n)=\bigcup_{k=0}^{n+1} \mathcal{R}(n)_k$. -/
+lemma ext_closed_sets_eq_biUnion (n : ℕ) :
+    ext_closed_sets n =
+      (Finset.range (n + 2)).biUnion (ext_closed_sets_with_specified_number_projectives n) := by
+  ext Y
+  simp only [Finset.mem_biUnion, Finset.mem_range,
+    ext_closed_sets_with_specified_number_projectives, Finset.mem_filter]
+  refine ⟨fun hY => ⟨_, ?_, hY, rfl⟩, fun ⟨_, _, hY, _⟩ => hY⟩
+  have h := Finset.card_le_card
+    (Finset.filter_subset_filter (fun p => p.1.1 = 0) (Finset.subset_univ Y))
+  rw [cardinality_projectives_in_univ] at h
+  omega
+
+/-- $R(n)=\sum_{k=0}^{n+1} R(n)_k$. -/
+lemma card_ext_closed_sets_eq_sum (n : ℕ) :
+    (ext_closed_sets n).card =
+    ∑ k ∈ Finset.range (n + 2), (ext_closed_sets_with_specified_number_projectives n k).card := by
+  rw [ext_closed_sets_eq_biUnion n]
+  apply Finset.card_biUnion
+  intro k _ l _ hkl
+  exact disjoint_with_specified_projectives_of_number_projectives_differs hkl
 
 /-- $P(n)_0 = 0$. -/
 theorem card_ext_closed_sets_containing_proj_inj_with_specified_number_projectives_zero (n : ℕ) :
@@ -122,3 +161,27 @@ lemma disjoint_containing_proj_inj_with_specified_projectives_of_number_projecti
   simp only [ext_closed_sets_containing_proj_inj_with_specified_number_projectives, mem_filter]
     at hk hl
   omega
+
+/-- $\mathcal{P}(n)=\bigcup_{k=0}^{n+1} \mathcal{P}(n)_k$. -/
+lemma ext_closed_sets_containing_proj_inj_eq_biUnion (n : ℕ) :
+    ext_closed_sets_containing_proj_inj n =
+      (Finset.range (n + 2)).biUnion
+        (ext_closed_sets_containing_proj_inj_with_specified_number_projectives n) := by
+  ext Y
+  simp only [Finset.mem_biUnion, Finset.mem_range,
+    ext_closed_sets_containing_proj_inj_with_specified_number_projectives, Finset.mem_filter]
+  refine ⟨fun hY => ⟨_, ?_, hY, rfl⟩, fun ⟨_, _, hY, _⟩ => hY⟩
+  have h := Finset.card_le_card
+    (Finset.filter_subset_filter (fun p => p.1.1 = 0) (Finset.subset_univ Y))
+  rw [cardinality_projectives_in_univ] at h
+  omega
+
+/-- $P(n)=\sum_{k=0}^{n+1} P(n)_k$. -/
+lemma card_ext_closed_sets_containing_proj_inj_eq_sum (n : ℕ) :
+    (ext_closed_sets_containing_proj_inj n).card =
+    ∑ k ∈ Finset.range (n + 2),
+      (ext_closed_sets_containing_proj_inj_with_specified_number_projectives n k).card := by
+  rw [ext_closed_sets_containing_proj_inj_eq_biUnion n]
+  apply Finset.card_biUnion
+  intro k _ l _ hkl
+  exact disjoint_containing_proj_inj_with_specified_projectives_of_number_projectives_differs hkl
