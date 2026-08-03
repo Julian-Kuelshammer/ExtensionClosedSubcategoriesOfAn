@@ -17,6 +17,16 @@ lemma mem_higher_nakayama_convention_iff (n : ℕ) (p : ℕ × ℕ) :
 def ext_interlace {n : ℕ} (p q : higher_nakayama_convention n) : Prop :=
 q.1.1 + 1 ≤ p.1.1 ∧ p.1.1 ≤ q.1.2 + 1 ∧ q.1.2 + 1 ≤ p.1.2
 
+/-- The objects of the form (0,i) are projective. -/
+lemma proj_of_fst_eq_zero {n : ℕ} (p q : higher_nakayama_convention n) (hproj : p.1.1 = 0) :
+¬ ext_interlace p q := by
+  grind [ext_interlace]
+
+/-- The objects of the form (i,n) are injective. -/
+lemma inj_of_snd_eq_top {n : ℕ} (p q : higher_nakayama_convention n) (hinj : q.1.2 = n) :
+¬ ext_interlace p q := by
+  grind [ext_interlace, higher_nakayama_convention]
+
 /-- Let `p=(a,b)` and `q=(c,d)` be such that `Ext^1(p,q)≠0`. Then, there is a short exact sequence
 `0 → (c,d) → (c,b) ⊕ (a,d) → (a,b) → 0`, where `(c,b)` is a longer intervall, which we call
 `long_extension`. -/
