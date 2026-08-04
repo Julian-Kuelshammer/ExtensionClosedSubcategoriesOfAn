@@ -3,7 +3,7 @@ import Mathlib.Data.Finset.Powerset
 import Mathlib.Data.Fintype.Card
 import Mathlib.Data.Finset.Basic
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
-
+import Mathlib.Order.Interval.Finset.Nat
 
 instance {n : ℕ} (p q : higher_nakayama_convention n) : Decidable (ext_interlace p q) := by
   unfold ext_interlace
@@ -309,6 +309,12 @@ def ext_closed_succ_without_projectives_equiv_ext_closed (n : ℕ) :
       apply Subtype.ext
       simp [toNonProjectives, toNonProjectives_fromNonProjectives, map_symm_equiv]
   }
+
+theorem helper6 (n : ℕ) : card_ext_closed_sets_with_specified_number_projectives (n + 1) 0
+= ∑ i ∈ Finset.Icc 0 (n + 1), card_ext_closed_sets_with_specified_number_projectives n i := by
+  simp_rw [card_ext_closed_sets_with_specified_number_projectives,
+    ← Nat.range_succ_eq_Icc_zero (n + 1), ← card_ext_closed_sets_eq_sum, ← Fintype.card_coe]
+  exact Fintype.card_congr (ext_closed_succ_without_projectives_equiv_ext_closed n)
 
 /-- $P(n)_0 = 0$. -/
 theorem card_ext_closed_sets_containing_proj_inj_with_specified_number_projectives_zero (n : ℕ) :
