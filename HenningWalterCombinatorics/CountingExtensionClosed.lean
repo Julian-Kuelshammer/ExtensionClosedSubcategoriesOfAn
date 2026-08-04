@@ -310,7 +310,9 @@ def ext_closed_succ_without_projectives_equiv_ext_closed (n : ℕ) :
       simp [toNonProjectives, toNonProjectives_fromNonProjectives, map_symm_equiv]
   }
 
-theorem helper6 (n : ℕ) : card_ext_closed_sets_with_specified_number_projectives (n + 1) 0
+/-- Proposition 1 (6) -/
+theorem card_ext_closed_with_specified_number_of_projectives_zero (n : ℕ) :
+card_ext_closed_sets_with_specified_number_projectives (n + 1) 0
 = ∑ i ∈ Finset.Icc 0 (n + 1), card_ext_closed_sets_with_specified_number_projectives n i := by
   simp_rw [card_ext_closed_sets_with_specified_number_projectives,
     ← Nat.range_succ_eq_Icc_zero (n + 1), ← card_ext_closed_sets_eq_sum, ← Fintype.card_coe]
