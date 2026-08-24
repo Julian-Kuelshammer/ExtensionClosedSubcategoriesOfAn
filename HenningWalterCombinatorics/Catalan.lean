@@ -16,6 +16,9 @@ a ⟨n, by omega⟩ = n := by
   have := hB.1 ⟨n, by omega⟩
   grind
 
+lemma isBracketing_exists_final {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : IsBracketing a) :
+  ∃ k : ℕ, ∃hk : k < n + 1, (a ⟨k, hk⟩) = n := ⟨n, lt_add_one n, isBracketing_final a hB⟩
+
 lemma isBracketing_id {n : ℕ} : IsBracketing (id : Fin n → Fin n) := by grind [IsBracketing]
 
 lemma isBracketing_const_last {n : ℕ} : IsBracketing (Function.const (Fin (n + 1)) ⟨n, by omega⟩)
@@ -97,9 +100,47 @@ lemma bracketJoin_mem {k l : ℕ} {a : Fin k → Fin k} {b : Fin l → Fin l} (h
       have := hb.2 ⟨s, hs⟩ ⟨t, ht⟩ (Fin.mk_le_mk.mpr (by omega)) (by grind)
       grind [bracketJoin_val_of_gt]
 
-def construct {k l : ℕ}  :
+def construct {k l : ℕ} :
 BracketingSequences k → BracketingSequences l → BracketingSequences (k + l + 1) :=
 sorry
+
+def bracketLeft {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : IsBracketing a) :
+let k := Nat.find (isBracketing_exists_final a hB); Fin k → Fin k :=
+fun ⟨i, hi⟩ ↦ ⟨a ⟨i, by grind⟩, by
+  set k := Nat.find (isBracketing_exists_final a hB) with hk
+  by_contra hik
+  have hB2 := hB.2 ⟨i, by grind⟩ ⟨k, by grind⟩ (le_of_lt hi) (Nat.le_of_not_lt hik)
+  obtain ⟨_, hspeck⟩ := Nat.find_spec (isBracketing_exists_final a hB)
+  have hpi : (a ⟨i, by grind⟩).val = n := by grind
+  have := Nat.find_min' (isBracketing_exists_final a hB) ⟨by omega, hpi⟩
+  omega⟩
+
+lemma bracketLeftIsBracketing {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : IsBracketing a) :
+(IsBracketing (bracketLeft a hB)) := by
+  constructor
+  · intro ⟨i, hi⟩
+    exact hB.1 ⟨i, by grind⟩
+  · intro ⟨i, hi⟩ ⟨j, hj⟩ hij hja
+    exact hB.2 ⟨i, by grind⟩ ⟨j, by grind⟩ hij hja
+
+def bracketRight {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : IsBracketing a) :
+let k := Nat.find (isBracketing_exists_final a hB); Fin (n - k) → Fin (n - k) :=
+fun ⟨i, hi⟩ ↦ ⟨a ⟨i + 1 + Nat.find (isBracketing_exists_final a hB), by grind⟩
+  - (Nat.find (isBracketing_exists_final a hB) + 1), by omega⟩
+
+lemma bracketRightIsBracketing {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : IsBracketing a) :
+(IsBracketing (bracketRight a hB)) := by
+  constructor
+  · set k := Nat.find (isBracketing_exists_final a hB) with hk
+    intro ⟨i, hi⟩
+    simp [bracketRight]
+    sorry
+  · intro ⟨i, hi⟩ ⟨j, hj⟩ hij hja
+    have := hB.1 ⟨i + 1 + Nat.find (isBracketing_exists_final a hB), by omega⟩
+    have := hB.2 ⟨i + 1 + Nat.find (isBracketing_exists_final a hB), by omega⟩
+      ⟨j + 1 + Nat.find (isBracketing_exists_final a hB), by omega⟩ (by grind)
+      (by grind [bracketRight])
+    grind [bracketRight]
 
 theorem bracketingSequences_card (n : ℕ) : (BracketingSequences n).card = catalan n := by
   induction n using Nat.case_strong_induction_on with
