@@ -2,6 +2,40 @@ import Mathlib.Combinatorics.Enumerative.Catalan.Basic
 import Mathlib.Data.Int.ConditionallyCompleteOrder
 import Mathlib.Data.Nat.SuccPred
 
+/-!
+# Bracketing Sequences
+
+
+
+## Main definitions
+
+* `IsBracketing n`: A predicate on functions `a : Fin n → Fin n` to satisfy the property of being a
+bracketing sequences, i.e. `i ≤ a i` and `i ≤ j ≤ a i → a j ≤ a i`.
+* `BracketingSequences n`: The `Finset` of all bracketing sequences `Fin n → Fin n`.
+
+## Main results
+
+* `bracketingSequences_card`: The result that the number of bracketing sequences is given by the
+Catalan numbers.
+
+## Implementation details
+
+In the literature, bracketing functions have been defined as functions `Icc 1 n → Icc 1 n`. As is
+customary, we have shifted our sequences to instead go `Fin n → Fin n`.
+
+## Literature
+
+Huang, Samuel and Tamari, Dov: Problems of Associativity: A Simple Proof for the Lattice Property of
+Systems Ordered by a Semi-associative Law, Journal of Combinatorial Theory (A) 13, 7--13 (1972)
+
+## TODO
+
+* Introduce the lattice structure on bracketing sequences.
+
+-/
+
+/-- A sequence `a : Fin n → Fin n` is bracketing if `i ≤ a i` for all `i` and for all `i` and `j`
+such that `i ≤ j ≤ a i` one has `a j ≤ a i`. -/
 def IsBracketing {n : ℕ} (a : Fin n → Fin n) : Prop :=
 (∀i, i.val ≤ a i) ∧ (∀i j, i ≤ j → j.val ≤ a i → a j ≤ a i)
 
@@ -9,15 +43,23 @@ instance {n : ℕ} (a : Fin n → Fin n) : Decidable (IsBracketing a) := by
   unfold IsBracketing; infer_instance
 
 @[simp] lemma isBracketing_final {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : IsBracketing a) :
-a ⟨n, by omega⟩ = n := by grind [hB.1 ⟨n, by omega⟩]
+a ⟨n, lt_add_one n⟩ = n := by grind [hB.1 ⟨n, lt_add_one n⟩]
 
 lemma isBracketing_exists_final {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : IsBracketing a) :
   ∃ k : ℕ, ∃hk : k < n + 1, (a ⟨k, hk⟩) = n := ⟨n, lt_add_one n, isBracketing_final a hB⟩
 
 lemma isBracketing_id {n : ℕ} : IsBracketing (id : Fin n → Fin n) := by grind [IsBracketing]
 
-lemma isBracketing_const_last {n : ℕ} : IsBracketing (Function.const (Fin (n + 1)) ⟨n, by omega⟩)
+lemma isBracketing_const_last {n : ℕ} : IsBracketing (Function.const _ ⟨n, lt_add_one n⟩)
 := by grind [IsBracketing]
+
+lemma isFixedPoint_of_bracketing {n : ℕ} {a : Fin n → Fin n} (hB : IsBracketing a) (i : Fin n) :
+Function.IsFixedPt a (a i) := le_antisymm (hB.2 i (a i) (hB.1 i) (le_refl (a i))) (hB.1 (a i))
+
+lemma idempotent_of_bracketing {n : ℕ} {a : Fin n → Fin n} (hB : IsBracketing a) :
+a ∘ a = a := by
+  funext i
+  simpa only [Function.comp_apply, Function.IsFixedPt] using isFixedPoint_of_bracketing hB i
 
 def BracketingSequences (n : ℕ) : Finset (Fin n → Fin n) :=
 Finset.univ.filter (IsBracketing)
@@ -25,12 +67,6 @@ Finset.univ.filter (IsBracketing)
 lemma mem_BracketingSequences {n : ℕ} (a : Fin n → Fin n) :
 a ∈ BracketingSequences n ↔ (∀i, i.val ≤ a i) ∧
 (∀i j, i ≤ j → j.val ≤ a i → a j ≤ a i) := by simp [BracketingSequences, IsBracketing]
-
-#eval (BracketingSequences 0).card
-#eval (BracketingSequences 1).card
-#eval (BracketingSequences 2).card
-#eval (BracketingSequences 3).card
-#eval (BracketingSequences 4).card
 
 /-- Given two sequences `a` and `b`, constructs the sequence a (k+l) (k+1+b). -/
 def bracketJoin {k l : ℕ} (b : Fin k → Fin k) (c : Fin l → Fin l) :
@@ -67,10 +103,7 @@ lemma bracketJoin_mem {k l : ℕ} {b : Fin k → Fin k} {c : Fin l → Fin l} (h
     · simpa [bracketJoin_val_of_lt b c h] using hb.1 ⟨i, h⟩
     · simp [bracketJoin_val_mid b c]
     · obtain ⟨t, rfl⟩ : ∃ t, i = k + 1 + t := ⟨i - (k + 1), by omega⟩
-      have ht : t < l := by omega
-      have : t ≤ (c ⟨t, ht⟩).val := hc.1 ⟨t, ht⟩
-      simp only [bracketJoin_val_of_gt b c ht]
-      omega
+      grind [bracketJoin_val_of_gt, hc.1 ⟨t, by omega⟩]
   · rintro ⟨i, hi⟩ ⟨j, hj⟩ hij hjbc
     simp only [Fin.le_def] at hij ⊢
     rcases lt_trichotomy i k with h | rfl | h
@@ -243,6 +276,7 @@ BracketingSequences k ×ˢ BracketingSequences (n - k) :=
         grind [bracketJoin_val_of_gt b c j.isLt]
       }
 
+/-- The number of Bracketing sequences of size `n` is given by the `n`th Catalan number. -/
 theorem bracketingSequences_card (n : ℕ) : (BracketingSequences n).card = catalan n := by
   induction n using Nat.case_strong_induction_on with
   | hz => rw [catalan_zero]; decide
