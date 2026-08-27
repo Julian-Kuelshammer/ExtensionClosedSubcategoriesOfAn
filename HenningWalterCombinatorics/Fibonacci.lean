@@ -11,14 +11,9 @@ namespace Nat
 /-- The sequence denoted $G$ in the paper, in OEIS it is A001519 up to index shift. -/
 def odd_fib (n : ℕ) : ℕ := fib (2 * n + 1)
 
-@[simp]
-lemma odd_fib_zero : odd_fib 0 = 1 := rfl
-
-@[simp]
-lemma odd_fib_one : odd_fib 1 = 2 := rfl
-
-@[simp]
-lemma odd_fib_two : odd_fib 2 = 5 := rfl
+@[simp] lemma odd_fib_zero : odd_fib 0 = 1 := rfl
+@[simp] lemma odd_fib_one : odd_fib 1 = 2 := rfl
+@[simp] lemma odd_fib_two : odd_fib 2 = 5 := rfl
 
 theorem odd_fib_add_two {n : ℕ} :
 odd_fib (n + 2) + odd_fib n = 3 * odd_fib (n + 1) := by
