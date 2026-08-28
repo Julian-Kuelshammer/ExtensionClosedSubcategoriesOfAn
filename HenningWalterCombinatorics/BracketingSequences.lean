@@ -3,9 +3,30 @@ import Mathlib.Data.Int.ConditionallyCompleteOrder
 import Mathlib.Data.Nat.SuccPred
 
 /-!
-# Bracketing Sequences
+# Bracketing functions
 
+Bracketing functions `a : Fin n → Fin n` provide an elementary description of the Tamari lattice.
+They correspond to the more classical encodings of binary trees as follows: Labelling the vertices
+of the binary tree with the in-order traversal, i.e. recursively numbering first the left tree, then
+the root, and finally the right tree, `a i` is the largest label occurring in the subtree rooted at
+`i`. The partial order is then just given by componentwise comparison. This partial order is in fact
+a lattice with meet given componentwise, but join given as the least bracketing function above the
+pointwise maximum.
 
+As an example, for `n = 3` one obtains the following Hasse diagram:
+
+```
+              ![2,2,2]
+             /        \
+            /          \
+    ![0,2,2]         ![2,1,2]
+            \           |
+             \          |
+              \       ![1,1,2]
+               \       /
+                \     /
+                ![0,1,2]
+```
 
 ## Main definitions
 
@@ -38,16 +59,17 @@ deriving Decidable
 
 open Function
 
-@[simp] lemma isBracketing_final {n : ℕ} {a : Fin (n + 1) → Fin (n + 1)} (hB : a.IsBracketing) :
+lemma isBracketing_final {n : ℕ} {a : Fin (n + 1) → Fin (n + 1)} (hB : a.IsBracketing) :
   a ⟨n, lt_add_one n⟩ = n := by grind [hB.1 ⟨n, lt_add_one n⟩]
 
 lemma isBracketing_exists_final {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : a.IsBracketing) :
   ∃ k : ℕ, ∃hk : k < n + 1, (a ⟨k, hk⟩) = n := ⟨n, lt_add_one n, isBracketing_final hB⟩
 
-lemma isBracketing_id {n : ℕ} : (id : Fin n → Fin n).IsBracketing := by grind [IsBracketing]
+lemma isBracketing_id {n : ℕ} : (id : Fin n → Fin n).IsBracketing :=
+  ⟨fun _ ↦ le_rfl, fun _ _ _ hji ↦ hji⟩
 
-lemma isBracketing_const_last {n : ℕ} : (Function.const _ ⟨n, lt_add_one n⟩).IsBracketing := by
-  grind [IsBracketing]
+lemma isBracketing_const_last {n : ℕ} : (Function.const _ ⟨n, lt_add_one n⟩).IsBracketing :=
+  ⟨fun i ↦ i.is_le, fun _ _ _ _ ↦ Fin.ge_of_eq rfl⟩
 
 lemma isFixedPt_of_bracketing {n : ℕ} {a : Fin n → Fin n} (hB : a.IsBracketing) (i : Fin n) :
 Function.IsFixedPt a (a i) := le_antisymm (hB.2 i (a i) (hB.1 i) (le_refl (a i))) (hB.1 (a i))
