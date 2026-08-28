@@ -9,13 +9,13 @@ import Mathlib.Data.Nat.SuccPred
 
 ## Main definitions
 
-* `IsBracketing n`: A predicate on functions `a : Fin n → Fin n` to satisfy the property of being a
-bracketing sequences, i.e. `i ≤ a i` and `i ≤ j ≤ a i → a j ≤ a i`.
-* `BracketingSequences n`: The `Finset` of all bracketing sequences `Fin n → Fin n`.
+* `IsBracketing`: A predicate on functions `a : Fin n → Fin n` to satisfy the property of being a
+bracketing functions, i.e. `i ≤ a i` and `i ≤ j ≤ a i → a j ≤ a i`.
+* `bracketingSequences n`: The `Finset` of all bracketing sequences `Fin n → Fin n`.
 
 ## Main results
 
-* `bracketingSequences_card`: The result that the number of bracketing sequences is given by the
+* `bracketingSequences_card`: The number of bracketing sequences of length `n` is given by the `n`th
 Catalan numbers.
 
 ## Implementation details
@@ -25,48 +25,44 @@ customary, we have shifted our sequences to instead go `Fin n → Fin n`.
 
 ## Literature
 
-Huang, Samuel and Tamari, Dov: Problems of Associativity: A Simple Proof for the Lattice Property of
-Systems Ordered by a Semi-associative Law, Journal of Combinatorial Theory (A) 13, 7--13 (1972)
-
-## TODO
-
-* Introduce the lattice structure on bracketing sequences.
+* Huang, Samuel and Tamari, Dov: Problems of Associativity: A Simple Proof for the Lattice Property
+of Systems Ordered by a Semi-associative Law, Journal of Combinatorial Theory (A) 13, 7--13 (1972)
 
 -/
 
-/-- A sequence `a : Fin n → Fin n` is bracketing if `i ≤ a i` for all `i` and for all `i` and `j`
+/-- A function `a : Fin n → Fin n` is bracketing if `i ≤ a i` for all `i` and for all `i` and `j`
 such that `i ≤ j ≤ a i` one has `a j ≤ a i`. -/
-def IsBracketing {n : ℕ} (a : Fin n → Fin n) : Prop :=
-(∀i, i.val ≤ a i) ∧ (∀i j, i ≤ j → j.val ≤ a i → a j ≤ a i)
+def Function.IsBracketing {n : ℕ} (a : Fin n → Fin n) : Prop :=
+  (∀ i, i.val ≤ a i) ∧ (∀ i j, i ≤ j → j.val ≤ a i → a j ≤ a i)
+deriving Decidable
 
-instance {n : ℕ} (a : Fin n → Fin n) : Decidable (IsBracketing a) := by
-  unfold IsBracketing; infer_instance
+open Function
 
-@[simp] lemma isBracketing_final {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : IsBracketing a) :
-a ⟨n, lt_add_one n⟩ = n := by grind [hB.1 ⟨n, lt_add_one n⟩]
+@[simp] lemma isBracketing_final {n : ℕ} {a : Fin (n + 1) → Fin (n + 1)} (hB : a.IsBracketing) :
+  a ⟨n, lt_add_one n⟩ = n := by grind [hB.1 ⟨n, lt_add_one n⟩]
 
-lemma isBracketing_exists_final {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : IsBracketing a) :
-  ∃ k : ℕ, ∃hk : k < n + 1, (a ⟨k, hk⟩) = n := ⟨n, lt_add_one n, isBracketing_final a hB⟩
+lemma isBracketing_exists_final {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : a.IsBracketing) :
+  ∃ k : ℕ, ∃hk : k < n + 1, (a ⟨k, hk⟩) = n := ⟨n, lt_add_one n, isBracketing_final hB⟩
 
-lemma isBracketing_id {n : ℕ} : IsBracketing (id : Fin n → Fin n) := by grind [IsBracketing]
+lemma isBracketing_id {n : ℕ} : (id : Fin n → Fin n).IsBracketing := by grind [IsBracketing]
 
-lemma isBracketing_const_last {n : ℕ} : IsBracketing (Function.const _ ⟨n, lt_add_one n⟩)
-:= by grind [IsBracketing]
+lemma isBracketing_const_last {n : ℕ} : (Function.const _ ⟨n, lt_add_one n⟩).IsBracketing := by
+  grind [IsBracketing]
 
-lemma isFixedPoint_of_bracketing {n : ℕ} {a : Fin n → Fin n} (hB : IsBracketing a) (i : Fin n) :
+lemma isFixedPt_of_bracketing {n : ℕ} {a : Fin n → Fin n} (hB : a.IsBracketing) (i : Fin n) :
 Function.IsFixedPt a (a i) := le_antisymm (hB.2 i (a i) (hB.1 i) (le_refl (a i))) (hB.1 (a i))
 
-lemma idempotent_of_bracketing {n : ℕ} {a : Fin n → Fin n} (hB : IsBracketing a) :
+lemma idempotent_of_bracketing {n : ℕ} {a : Fin n → Fin n} (hB : a.IsBracketing) :
 a ∘ a = a := by
   funext i
-  simpa only [Function.comp_apply, Function.IsFixedPt] using isFixedPoint_of_bracketing hB i
+  simpa only [Function.comp_apply, Function.IsFixedPt] using isFixedPt_of_bracketing hB i
 
-def BracketingSequences (n : ℕ) : Finset (Fin n → Fin n) :=
+def bracketingSequences (n : ℕ) : Finset (Fin n → Fin n) :=
 Finset.univ.filter (IsBracketing)
 
-lemma mem_BracketingSequences {n : ℕ} (a : Fin n → Fin n) :
-a ∈ BracketingSequences n ↔ (∀i, i.val ≤ a i) ∧
-(∀i j, i ≤ j → j.val ≤ a i → a j ≤ a i) := by simp [BracketingSequences, IsBracketing]
+lemma mem_bracketingSequences {n : ℕ} (a : Fin n → Fin n) :
+a ∈ bracketingSequences n ↔ (∀ i, i.val ≤ a i) ∧
+(∀ i j, i ≤ j → j.val ≤ a i → a j ≤ a i) := by simp [bracketingSequences, IsBracketing]
 
 /-- Given two sequences `a` and `b`, constructs the sequence a (k+l) (k+1+b). -/
 def bracketJoin {k l : ℕ} (b : Fin k → Fin k) (c : Fin l → Fin l) :
@@ -122,7 +118,7 @@ lemma bracketJoin_mem {k l : ℕ} {b : Fin k → Fin k} {c : Fin l → Fin l} (h
       have := hc.2 ⟨s, hs⟩ ⟨t, ht⟩ (Fin.mk_le_mk.mpr (by omega)) (by grind)
       grind [bracketJoin_val_of_gt]
 
-def bracketLeft {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : IsBracketing a) :
+def bracketLeft {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : a.IsBracketing) :
 let k := Nat.find (isBracketing_exists_final a hB); Fin k → Fin k :=
 fun ⟨i, hi⟩ ↦ ⟨a ⟨i, by grind⟩, by
   set k := Nat.find (isBracketing_exists_final a hB) with hk
@@ -133,7 +129,7 @@ fun ⟨i, hi⟩ ↦ ⟨a ⟨i, by grind⟩, by
   have := Nat.find_min' (isBracketing_exists_final a hB) ⟨by omega, hpi⟩
   omega⟩
 
-lemma bracketLeftIsBracketing {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : IsBracketing a) :
+lemma bracketLeftIsBracketing {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : a.IsBracketing) :
 (IsBracketing (bracketLeft a hB)) := by
   constructor
   · intro ⟨i, hi⟩
@@ -141,12 +137,12 @@ lemma bracketLeftIsBracketing {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : 
   · intro ⟨i, hi⟩ ⟨j, hj⟩ hij hja
     exact hB.2 ⟨i, by grind⟩ ⟨j, by grind⟩ hij hja
 
-def bracketRight {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : IsBracketing a) :
+def bracketRight {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : a.IsBracketing) :
 let k := Nat.find (isBracketing_exists_final a hB); Fin (n - k) → Fin (n - k) :=
 fun ⟨i, hi⟩ ↦ ⟨a ⟨i + 1 + Nat.find (isBracketing_exists_final a hB), by grind⟩
   - (Nat.find (isBracketing_exists_final a hB) + 1), by omega⟩
 
-lemma bracketRightIsBracketing {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : IsBracketing a) :
+lemma bracketRightIsBracketing {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB : a.IsBracketing) :
 (IsBracketing (bracketRight a hB)) := by
   constructor
   · set k := Nat.find (isBracketing_exists_final a hB) with hk
@@ -163,12 +159,12 @@ lemma bracketRightIsBracketing {n : ℕ} (a : Fin (n + 1) → Fin (n + 1)) (hB :
 lemma bracket_pair_heq {n K L : ℕ} (hKL : K = L)
     {b' : Fin K → Fin K} {c' : Fin (n - K) → Fin (n - K)}
     {b : Fin L → Fin L} {c : Fin (n - L) → Fin (n - L)}
-    {h1 : (b', c') ∈ BracketingSequences K ×ˢ BracketingSequences (n - K)}
-    {h2 : (b, c) ∈ BracketingSequences L ×ˢ BracketingSequences (n - L)}
+    {h1 : (b', c') ∈ bracketingSequences K ×ˢ bracketingSequences (n - K)}
+    {h2 : (b, c) ∈ bracketingSequences L ×ˢ bracketingSequences (n - L)}
     (hbb : ∀ (i : Fin K) (j : Fin L), i.val = j.val → (b' i).val = (b j).val)
     (hcc : ∀ (i : Fin (n - K)) (j : Fin (n - L)), i.val = j.val → (c' i).val = (c j).val) :
-    HEq (⟨(b', c'), h1⟩ : ↥(BracketingSequences K ×ˢ BracketingSequences (n - K)))
-      (⟨(b, c), h2⟩ : ↥(BracketingSequences L ×ˢ BracketingSequences (n - L))) := by
+    HEq (⟨(b', c'), h1⟩ : ↥(bracketingSequences K ×ˢ bracketingSequences (n - K)))
+      (⟨(b, c), h2⟩ : ↥(bracketingSequences L ×ˢ bracketingSequences (n - L))) := by
   subst hKL
   apply heq_of_eq
   apply Subtype.ext
@@ -177,27 +173,27 @@ lemma bracket_pair_heq {n K L : ℕ} (hKL : K = L)
   simp [hbe, hce]
 
 def bracketingSequences_succ (n : ℕ) :
-BracketingSequences (n + 1) ≃ Σ k : Fin (n + 1),
-BracketingSequences k ×ˢ BracketingSequences (n - k) :=
+bracketingSequences (n + 1) ≃ Σ k : Fin (n + 1),
+bracketingSequences k ×ˢ bracketingSequences (n - k) :=
 { toFun := fun ⟨a, ha⟩ ↦ ⟨⟨Nat.find (isBracketing_exists_final a ((Finset.mem_filter.mp ha).2)),
     by grind⟩,
     ⟨(bracketLeft a ((Finset.mem_filter.mp ha).2), bracketRight a ((Finset.mem_filter.mp ha).2)),
     Finset.mem_product.mpr
-    ⟨by simp only [mem_BracketingSequences];
+    ⟨by simp only [mem_bracketingSequences];
         exact bracketLeftIsBracketing a ((Finset.mem_filter.mp ha).2),
-     by simp only [mem_BracketingSequences];
+     by simp only [mem_bracketingSequences];
         exact bracketRightIsBracketing a ((Finset.mem_filter.mp ha).2)⟩⟩⟩
   invFun := fun ⟨k, ⟨⟨b, c⟩, hbc⟩⟩ ↦
     have h : (k + 1 + (n - k)) = n + 1 := by omega
-    have hb : b ∈ BracketingSequences k := by
-      simpa [BracketingSequences] using (Finset.mem_product.mp hbc).1
-    have hc : c ∈ BracketingSequences _ := by
-      simpa [BracketingSequences] using (Finset.mem_product.mp hbc).2
-    have hj : bracketJoin b c ∈ BracketingSequences (k.val + 1 + (n - k.val)) := by
-      simp only [mem_BracketingSequences]
+    have hb : b ∈ bracketingSequences k := by
+      simpa [bracketingSequences] using (Finset.mem_product.mp hbc).1
+    have hc : c ∈ bracketingSequences _ := by
+      simpa [bracketingSequences] using (Finset.mem_product.mp hbc).2
+    have hj : bracketJoin b c ∈ bracketingSequences (k.val + 1 + (n - k.val)) := by
+      simp only [mem_bracketingSequences]
       exact bracketJoin_mem ((Finset.mem_filter.mp hb).2) ((Finset.mem_filter.mp hc).2)
     ⟨fun i => Fin.cast h (bracketJoin b c (Fin.cast h.symm i)), by
-      simp only [mem_BracketingSequences]
+      simp only [mem_bracketingSequences]
       have hjB : IsBracketing (bracketJoin b c) := (Finset.mem_filter.mp hj).2
       constructor
       · intro i
@@ -225,8 +221,7 @@ BracketingSequences k ×ˢ BracketingSequences (n - k) :=
       grind
     · have hi' : (⟨i, hi⟩ : Fin (n + 1)) = Fin.cast (by omega) (⟨k + 1 + (i - (k + 1)), by omega⟩ :
                 Fin (k + 1 + (n - k))) := by grind
-      rw [hi']
-      simp only [Fin.cast_mk, Fin.val_cast]
+      simp only [hi', Fin.cast_mk, Fin.val_cast]
       rw [bracketJoin_val_of_gt _ _ (by omega)]
       grind [bracketRight, hB.1 ⟨i - (k + 1) + 1 + k, by omega⟩]
   right_inv := by
@@ -277,9 +272,56 @@ BracketingSequences k ×ˢ BracketingSequences (n - k) :=
       }
 
 /-- The number of Bracketing sequences of size `n` is given by the `n`th Catalan number. -/
-theorem bracketingSequences_card (n : ℕ) : (BracketingSequences n).card = catalan n := by
+theorem bracketingSequences_card (n : ℕ) : (bracketingSequences n).card = catalan n := by
   induction n using Nat.case_strong_induction_on with
   | hz => rw [catalan_zero]; decide
   | hi n ih =>
     grind [Fintype.card_congr (bracketingSequences_succ n), Fintype.card_sigma, Finset.card_product,
     Fintype.card_coe, catalan_succ]
+
+instance {n : ℕ} : SemilatticeInf (bracketingSequences n) where
+  inf := fun a b ↦ ⟨fun i ↦ min (a.1 i) (b.1 i), by grind [mem_bracketingSequences]⟩
+  inf_le_left := by intro a b i; exact Std.min_le_left --could be solved by grind
+  inf_le_right := by intro a b i; exact Std.min_le_right --could be solved by grind
+  le_inf := by intro a b c hab hac i; exact le_min (hab i) (hac i) --could be solved by grind
+
+instance {n : ℕ} : OrderTop (bracketingSequences n) where
+  top := ⟨fun i => ⟨n - 1, by have := i.isLt; omega⟩, by grind [mem_bracketingSequences]⟩
+  le_top := by intro a i; grind
+
+instance {n : ℕ} : OrderBot (bracketingSequences n) where
+  bot := ⟨id, by rw [mem_bracketingSequences]; exact isBracketing_id⟩
+  bot_le := by intro ⟨a, ha⟩ i; grind [mem_bracketingSequences]
+
+instance instDecidableLEFinPi {n : ℕ} : DecidableLE (Fin n → Fin n) :=
+  fun a b => decidable_of_iff (∀ i, a i ≤ b i) Pi.le_def.symm
+
+/-- The least bracketing sequence above `a`. -/
+def bracketingClosure {n : ℕ} (a : Fin n → Fin n) : bracketingSequences n :=
+  (Finset.univ.filter fun b : bracketingSequences n ↦ a ≤ b).inf (fun b => b)
+
+lemma bracketingClosure_le {n : ℕ} {a : Fin n → Fin n} {b : bracketingSequences n} (h : a ≤ b) :
+  bracketingClosure a ≤ b := Finset.inf_le <| (Finset.mem_filter_univ b).mpr h
+
+lemma le_bracketingClosure {n : ℕ} (a : Fin n → Fin n) :
+    a ≤ (bracketingClosure a : Fin n → Fin n) := by
+  refine Finset.inf_induction (p := fun c : bracketingSequences n => a ≤ c) ?_ ?_ ?_
+  · intro i
+    change (a i : ℕ) ≤ (n - 1 : ℕ)
+    omega
+  · intro x hx y hy i
+    exact le_min (hx i) (hy i)
+  · intro b hb
+    exact (Finset.mem_filter_univ b).mp hb
+
+instance {n : ℕ} : Lattice (bracketingSequences n) :=
+  { sup := fun a b ↦ bracketingClosure (a ⊔ b)
+    le_sup_left := fun _ _ ↦ le_sup_left.trans (le_bracketingClosure _)
+    le_sup_right := fun _ _ ↦ le_sup_right.trans (le_bracketingClosure _)
+    sup_le := fun _ _ _ hac hbc ↦ bracketingClosure_le (sup_le hac hbc) }
+
+example : ¬ ∀ x y z : bracketingSequences 3, x ⊓ (y ⊔ z) = (x ⊓ y) ⊔ (x ⊓ z) := by
+  intro h
+  have := h ⟨![2,1,2], by decide⟩ ⟨![0,2,2], by decide⟩ ⟨![1,1,2], by decide⟩
+  revert this
+  decide

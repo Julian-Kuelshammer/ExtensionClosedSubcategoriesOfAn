@@ -16,10 +16,8 @@ def odd_fib (n : ℕ) : ℕ := fib (2 * n + 1)
 @[simp] lemma odd_fib_two : odd_fib 2 = 5 := rfl
 
 theorem odd_fib_add_two {n : ℕ} :
-odd_fib (n + 2) + odd_fib n = 3 * odd_fib (n + 1) := by
-  simp only [odd_fib, mul_add, fib_add (2 * n + 2) 2, fib_two, mul_one]
-  rw [show fib 3 = 2 by rfl, add_comm, ← add_assoc, ← fib_add_two]
-  ring
+odd_fib (n + 2) + odd_fib n = 3 * odd_fib (n + 1)  := by
+  grind [show fib 3 = 2 by rfl, fib_add_two, odd_fib]
 
 open Finset
 
