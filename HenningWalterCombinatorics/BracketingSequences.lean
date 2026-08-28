@@ -30,8 +30,8 @@ As an example, for `n = 3` one obtains the following Hasse diagram:
 
 ## Main definitions
 
-* `IsBracketing`: A predicate on functions `a : Fin n → Fin n` to satisfy the property of being a
-bracketing functions, i.e. `i ≤ a i` and `i ≤ j ≤ a i → a j ≤ a i`.
+* `Function.IsBracketing`: A predicate on functions `a : Fin n → Fin n` to satisfy the property of
+being a bracketing function, i.e. `i ≤ a i` and `i ≤ j ≤ a i → a j ≤ a i`.
 * `bracketingSequences n`: The `Finset` of all bracketing sequences `Fin n → Fin n`.
 
 ## Main results
@@ -79,6 +79,7 @@ a ∘ a = a := by
   funext i
   simpa only [Function.comp_apply, Function.IsFixedPt] using isFixedPt_of_bracketing hB i
 
+/-- The `Finset` of bracketing functions `Fin n → Fin n`. -/
 def bracketingSequences (n : ℕ) : Finset (Fin n → Fin n) :=
 Finset.univ.filter (IsBracketing)
 
@@ -86,7 +87,9 @@ lemma mem_bracketingSequences {n : ℕ} (a : Fin n → Fin n) :
 a ∈ bracketingSequences n ↔ (∀ i, i.val ≤ a i) ∧
 (∀ i j, i ≤ j → j.val ≤ a i → a j ≤ a i) := by simp [bracketingSequences, IsBracketing]
 
-/-- Given two sequences `a` and `b`, constructs the sequence a (k+l) (k+1+b). -/
+/-- Given two bracketing functions `a : Fin k → Fin k` and `b : Fin l → Fin l`, constructs a
+bracketing function on `Fin (k + 1 + l)` with first `k` values given by `a`, middle value being
+`k + l` and last `l` values given by `b` shifted by `k + 1`. -/
 def bracketJoin {k l : ℕ} (b : Fin k → Fin k) (c : Fin l → Fin l) :
     Fin (k + 1 + l) → Fin (k + 1 + l) :=
   Fin.addCases
