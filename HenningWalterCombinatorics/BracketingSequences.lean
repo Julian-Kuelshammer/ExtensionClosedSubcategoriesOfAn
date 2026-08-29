@@ -308,6 +308,7 @@ instance : OrderBot (bracketingFunctions n) where
   bot := ⟨id, by rw [mem_bracketingFunctions]; exact isBracketing_id⟩
   bot_le := by intro ⟨a, ha⟩ i; grind [mem_bracketingFunctions, IsBracketing]
 
+-- TODO: move to Mathlib/Order/Pi.lean?
 instance Pi.instDecidableLE {ι : Type*} {α : ι → Type*} [Fintype ι] [∀ i, LE (α i)]
     [∀ i, DecidableLE (α i)] : DecidableLE (∀ i, α i) :=
   fun a b => decidable_of_iff (∀ i, a i ≤ b i) Pi.le_def.symm
