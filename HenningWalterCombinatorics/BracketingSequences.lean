@@ -220,12 +220,12 @@ lemma isBracketing_cast {k : Fin (n + 1)} {b : Fin k → Fin k}
     ((fun i ↦ Fin.cast (show k + (n - k) + 1 = n + 1 by omega)
     (bracketingNode b c (Fin.cast (show n + 1 = k + (n - k) + 1 by omega) i)))).IsBracketing := by
   have hkn : k + (n - k) + 1 = n + 1 := by omega
-  have hac := isBracketing_bracketingNode hb hc
+  have hbc := isBracketing_bracketingNode hb hc
   refine ⟨fun i ↦ ?_, fun i j hij hja ↦ ?_⟩
-  · simpa using hac.1 (Fin.cast hkn.symm i)
-  · simpa using hac.2 (Fin.cast hkn.symm i) (Fin.cast hkn.symm j) (by simpa) (by simpa)
+  · simpa using hbc.1 (Fin.cast hkn.symm i)
+  · simpa using hbc.2 (Fin.cast hkn.symm i) (Fin.cast hkn.symm j) (by simpa) (by simpa)
 
-lemma bracket_pair_heq {k l : ℕ} (hKL : k = l) {b' : Fin k → Fin k}
+lemma bracket_pair_heq {k l : ℕ} (hkl : k = l) {b' : Fin k → Fin k}
     {c' : Fin (n - k) → Fin (n - k)} {b : Fin l → Fin l} {c : Fin (n - l) → Fin (n - l)}
     (h1 : (b', c') ∈ bracketingFunctions k ×ˢ bracketingFunctions (n - k))
     (h2 : (b, c) ∈ bracketingFunctions l ×ˢ bracketingFunctions (n - l))
@@ -233,9 +233,7 @@ lemma bracket_pair_heq {k l : ℕ} (hKL : k = l) {b' : Fin k → Fin k}
     (hcc : ∀ (i : Fin (n - k)) (j : Fin (n - l)), i.val = j.val → (c' i).val = (c j).val) :
     HEq (⟨(b', c'), h1⟩ : ↥(bracketingFunctions k ×ˢ bracketingFunctions (n - k)))
       (⟨(b, c), h2⟩ : ↥(bracketingFunctions l ×ˢ bracketingFunctions (n - l))) := by
-  subst hKL
-  apply heq_of_eq
-  apply Subtype.ext
+  subst hkl
   have hbe := funext fun i => Fin.ext (hbb i i rfl)
   have hce := funext fun i => Fin.ext (hcc i i rfl)
   simp [hbe, hce]
@@ -327,9 +325,20 @@ lemma le_bracketingClosure (a : Fin n → Fin n) :
     change (a i : ℕ) ≤ (n - 1 : ℕ)
     omega
   · intro x hx y hy i
-    exact le_min (hx i) (hy i)
+    exact le_inf (hx i) (hy i)
   · intro b hb
     exact (Finset.mem_filter_univ b).mp hb
+
+/-- `bracketingClosure` is left adjoint to the inclusion of bracketing functions into all functions
+`Fin n → Fin n`, exhibiting the bracketing functions as the closed elements of a closure operator.
+-/
+def bracketingGI : GaloisInsertion (bracketingClosure (n := n)) (fun b ↦ (b : Fin n → Fin n)) where
+  choice a h := ⟨a, mem_bracketingFunctions.mpr (by
+    rw [le_antisymm (le_bracketingClosure a) h]
+    exact mem_bracketingFunctions.mp (bracketingClosure a).2)⟩
+  gc a b := ⟨fun h ↦ (le_bracketingClosure a).trans h, fun h ↦ bracketingClosure_le h⟩
+  le_l_u b := le_bracketingClosure _
+  choice_eq a h := Subtype.ext (le_antisymm h (le_bracketingClosure a)).symm
 
 instance instLatticeBracketingFunctions : Lattice (bracketingFunctions n) where
   sup := fun a b ↦ bracketingClosure (a ⊔ b)
@@ -337,6 +346,8 @@ instance instLatticeBracketingFunctions : Lattice (bracketingFunctions n) where
   le_sup_right := fun _ _ ↦ le_sup_right.trans (le_bracketingClosure _)
   sup_le := fun _ _ _ hac hbc ↦ bracketingClosure_le (sup_le hac hbc)
 
+-- TODO: Move to counterexamples?
+-- The Tamari lattice is not distributive.
 example : ¬ ∀ x y z : bracketingFunctions 3, x ⊓ (y ⊔ z) = (x ⊓ y) ⊔ (x ⊓ z) := by
   intro h
   have := h ⟨![2,1,2], by decide⟩ ⟨![0,2,2], by decide⟩ ⟨![1,1,2], by decide⟩
