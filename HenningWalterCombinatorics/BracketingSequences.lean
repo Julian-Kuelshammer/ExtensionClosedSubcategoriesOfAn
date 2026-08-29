@@ -86,31 +86,40 @@ def bracketingFunctions (n : ℕ) : Finset (Fin n → Fin n) := Finset.univ.filt
 @[simp] lemma mem_bracketingFunctions {a : Fin n → Fin n} :
     a ∈ bracketingFunctions n ↔ a.IsBracketing := by simp [bracketingFunctions]
 
+section rootIndex
+
+variable {a : Fin (n + 1) → Fin (n + 1)} (ha : a.IsBracketing)
+
 /-- The index of the first element mapped to the last index, i.e. the position of the root
 in the in-order labelling. -/
-def Function.IsBracketing.rootIndex {a : Fin (n + 1) → Fin (n + 1)} (ha : a.IsBracketing) :
-    Fin (n + 1) :=
+def Function.IsBracketing.rootIndex : Fin (n + 1) :=
   ⟨Nat.find (ha.exists_apply_eq_last), (Nat.find_spec (ha.exists_apply_eq_last)).1⟩
 
-lemma apply_rootIndex {a : Fin (n + 1) → Fin (n + 1)} (ha : a.IsBracketing) :
-    a (ha.rootIndex) = n := (Nat.find_spec (ha.exists_apply_eq_last)).2
+lemma apply_rootIndex : a (ha.rootIndex) = n := (Nat.find_spec (ha.exists_apply_eq_last)).2
 
-lemma rootIndex_le {a : Fin (n + 1) → Fin (n + 1)} (ha : a.IsBracketing) {k : Fin (n + 1)}
-    (h : a k = n) : ha.rootIndex ≤ k := Nat.find_min' _ ⟨k.2, h⟩
+lemma rootIndex_le {k : Fin (n + 1)} (h : a k = n) : ha.rootIndex ≤ k := Nat.find_min' _ ⟨k.2, h⟩
 
-lemma le_rootIndex {a : Fin (n + 1) → Fin (n + 1)} (ha : a.IsBracketing) {k : ℕ}
-    (h : ∀ m : Fin (n + 1), (m : ℕ) < k → (a m : ℕ) ≠ n) : k ≤ (ha.rootIndex : ℕ) :=
+lemma le_rootIndex {k : ℕ} (h : ∀ m : Fin (n + 1), (m : ℕ) < k → (a m : ℕ) ≠ n) :
+    k ≤ (ha.rootIndex : ℕ) :=
   (Nat.le_find_iff _ _).mpr fun m hmk ⟨hmn, hval⟩ => h ⟨m, hmn⟩ hmk hval
 
-lemma lt_rootIndex {a : Fin (n + 1) → Fin (n + 1)} (ha : a.IsBracketing) {k : Fin (n + 1)}
-    (hk : k < ha.rootIndex) : a k ≠ n :=
+lemma lt_rootIndex {k : Fin (n + 1)} (hk : k < ha.rootIndex) : a k ≠ n :=
   fun h ↦ Nat.find_min (ha.exists_apply_eq_last) hk ⟨k.isLt, h⟩
+
+lemma rootIndex_cast {m : ℕ} (h : n = m)
+    (ha' : (fun (i : Fin (m + 1)) ↦ Fin.cast (by omega) (a (Fin.cast (by omega) i))).IsBracketing) :
+    (ha'.rootIndex : ℕ) = (ha.rootIndex : ℕ) := by subst h; congr 1
+
+end rootIndex
+
+section node
+
+variable {k l : ℕ} (b : Fin k → Fin k) (c : Fin l → Fin l)
 
 /-- Given two bracketing functions `b : Fin k → Fin k` and `c : Fin l → Fin l`, constructs a
 bracketing function on `Fin (k + l + 1)` with first `k` values given by `b`, middle value being
 `k + l` and last `l` values given by `c` shifted by `k + 1`. -/
-def bracketingNode {k l : ℕ} (b : Fin k → Fin k) (c : Fin l → Fin l) :
-    Fin (k + l + 1) → Fin (k + l + 1) :=
+def bracketingNode : Fin (k + l + 1) → Fin (k + l + 1) :=
   fun i ↦
     if h : (i : ℕ) < k then ⟨b ⟨i, h⟩, by have := (b ⟨i, h⟩).isLt; omega⟩
     else if h' : (i : ℕ) = k then ⟨k + l, by omega⟩
@@ -118,20 +127,19 @@ def bracketingNode {k l : ℕ} (b : Fin k → Fin k) (c : Fin l → Fin l) :
       have := (c ⟨(i : ℕ) - (k + 1), by have := i.isLt; omega⟩).isLt; omega⟩
 
 /-- On the first `k` indices, `bracketingNode b c` is given by `b`. -/
-lemma bracketingNode_val_of_lt {k l : ℕ} (b : Fin k → Fin k) (c : Fin l → Fin l) {v : ℕ}
-    (h : v < k) : (bracketingNode b c ⟨v, by omega⟩).val = (b ⟨v, h⟩).val := by
-  simp [bracketingNode, h]
+lemma bracketingNode_val_of_lt {v : ℕ} (h : v < k) :
+    (bracketingNode b c ⟨v, by omega⟩).val = (b ⟨v, h⟩).val := by simp [bracketingNode, h]
 
 /-- At the separating index `k`, `bracketingNode b c` takes the maximal value `k + l`. -/
-lemma bracketingNode_val_mid {k l : ℕ} (b : Fin k → Fin k) (c : Fin l → Fin l) :
-    (bracketingNode b c ⟨k, by omega⟩).val = k + l := by simp [bracketingNode]
+lemma bracketingNode_val_mid : (bracketingNode b c ⟨k, by omega⟩).val = k + l := by
+  simp [bracketingNode]
 
 /-- On the last `l` indices, `bracketingNode b c` is `c` shifted by `k + 1`. -/
-lemma bracketingNode_val_of_gt {k l : ℕ} (b : Fin k → Fin k) (c : Fin l → Fin l) {t : ℕ}
-    (ht : t < l) : (bracketingNode b c ⟨k + 1 + t, by omega⟩).val = (c ⟨t, ht⟩).val + (k + 1) := by
+lemma bracketingNode_val_of_gt {t : ℕ} (ht : t < l) :
+    (bracketingNode b c ⟨k + 1 + t, by omega⟩ : ℕ) = c ⟨t, ht⟩ + (k + 1) := by
   grind [bracketingNode]
 
-lemma isBracketing_bracketingNode {k l : ℕ} {b : Fin k → Fin k} {c : Fin l → Fin l}
+lemma isBracketing_bracketingNode {b : Fin k → Fin k} {c : Fin l → Fin l}
     (hb : b.IsBracketing) (hc : c.IsBracketing) : (bracketingNode b c).IsBracketing := by
   constructor
   · rintro ⟨i, hi⟩
@@ -156,13 +164,15 @@ lemma isBracketing_bracketingNode {k l : ℕ} {b : Fin k → Fin k} {c : Fin l �
       have := hc.2 ⟨s, (by omega)⟩ ⟨t, (by omega)⟩ (Fin.mk_le_mk.mpr (by omega)) (by grind)
       grind [bracketingNode_val_of_gt]
 
-lemma rootIndex_bracketingNode {k l : ℕ} {b : Fin k → Fin k} {c : Fin l → Fin l}
+lemma rootIndex_bracketingNode {b : Fin k → Fin k} {c : Fin l → Fin l}
     (hb : b.IsBracketing) (hc : c.IsBracketing) :
     ((isBracketing_bracketingNode hb hc).rootIndex : ℕ) = k := by
   apply le_antisymm
   · exact rootIndex_le _ (bracketingNode_val_mid b c)
   · refine le_rootIndex _ fun _ hmk _ ↦ ?_
     grind [bracketingNode_val_of_lt b c hmk]
+
+end node
 
 /-- Given a bracketing function `a`, this constructs the function corresponding to the left tree of
 `a`. -/
@@ -210,10 +220,6 @@ lemma isBracketing_bracketingRight {a : Fin (n + 1) → Fin (n + 1)}
 @[simp] lemma val_bracketingRight {a : Fin (n + 1) → Fin (n + 1)} (ha : a.IsBracketing)
     (i : Fin (n - ha.rootIndex)) : (bracketingRight ha i : ℕ)
     = (a ((i.natAdd (ha.rootIndex + 1)).cast (by omega)) : ℕ) - (ha.rootIndex + 1) := rfl
-
-lemma rootIndex_cast {m : ℕ} (h : m = n) {a : Fin (m + 1) → Fin (m + 1)} (ha : a.IsBracketing)
-    (ha' : (fun (i : Fin (n + 1)) ↦ Fin.cast (by omega) (a (Fin.cast (by omega) i))).IsBracketing) :
-    (ha'.rootIndex : ℕ) = (ha.rootIndex : ℕ) := by subst h; congr 1
 
 lemma isBracketing_cast {k : Fin (n + 1)} {b : Fin k → Fin k}
     {c : Fin (n - k) → Fin (n - k)} (hb : b.IsBracketing) (hc : c.IsBracketing) :
@@ -274,8 +280,8 @@ def bracketingFunctionsSuccEquiv (n : ℕ) : bracketingFunctions (n + 1) ≃ Σ 
     have hc : c.IsBracketing := mem_bracketingFunctions.mp (Finset.mem_product.mp hbc).2
     have hkn := k.isLt
     have hk : ((isBracketing_cast hb hc).rootIndex : ℕ) = k :=
-      (rootIndex_cast (by omega) (isBracketing_bracketingNode hb hc) _).trans
-        (rootIndex_bracketingNode hb hc)
+      (rootIndex_cast (isBracketing_bracketingNode hb hc)
+        (by omega) _).trans (rootIndex_bracketingNode hb hc)
     simp only [Sigma.mk.injEq]
     refine ⟨Fin.ext hk , ?_⟩
     refine bracket_pair_heq hk _ _ ?_ ?_
