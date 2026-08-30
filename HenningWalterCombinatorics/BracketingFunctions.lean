@@ -15,10 +15,10 @@ As an example, for `n = 3` one obtains the following Hasse diagram:
 
 ```
               ![2,2,2]
-             /        \
-            /          \
-    ![0,2,2]         ![2,1,2]
-            \           |
+               /      \
+              /        \
+             /.       ![2,1,2]
+         ![0,2,2]       |
              \          |
               \       ![1,1,2]
                \       /
@@ -48,6 +48,14 @@ customary, we have shifted our functions to instead go `Fin n → Fin n`.
 
 * Huang, Samuel and Tamari, Dov: Problems of Associativity: A Simple Proof for the Lattice Property
   of Systems Ordered by a Semi-associative Law, Journal of Combinatorial Theory (A) 13, 7--13 (1972)
+
+## TODO
+
+* Combinatorially describe the covering relation for the Tamari lattice
+* Give a bijection between bracketing functions and binary trees.
+* Show that the Tamari lattice is semidistributive.
+* Show that the Tamari lattice is trim.
+
 -/
 
 variable {n : ℕ}
@@ -172,12 +180,27 @@ lemma rootIndex_bracketingNode {b : Fin k → Fin k} {c : Fin l → Fin l}
   · refine le_rootIndex _ fun _ hmk _ ↦ ?_
     grind [bracketingNode_val_of_lt b c hmk]
 
+lemma Function.IsBracketing.cast {m : ℕ} (h : m = n) {a : Fin m → Fin m} (ha : a.IsBracketing) :
+    (fun i ↦ Fin.cast h (a (Fin.cast h.symm i))).IsBracketing :=
+  ⟨fun i ↦ by simpa using ha.1 (Fin.cast h.symm i),
+   fun i j hij hja ↦ by
+     simpa using ha.2 (Fin.cast h.symm i) (Fin.cast h.symm j) (by simpa) (by simpa)⟩
+
+lemma isBracketing_cast {k : Fin (n + 1)} {b : Fin k → Fin k} {c : Fin (n - k) → Fin (n - k)}
+    (hb : b.IsBracketing) (hc : c.IsBracketing) :
+    (fun i ↦ Fin.cast (show k + (n - k) + 1 = n + 1 by omega)
+      (bracketingNode b c (Fin.cast (show n + 1 = k + (n - k) + 1 by omega) i))).IsBracketing :=
+  (isBracketing_bracketingNode hb hc).cast (by omega)
+
 end node
+
+section leftright
+
+variable {a : Fin (n + 1) → Fin (n + 1)} (ha : a.IsBracketing)
 
 /-- Given a bracketing function `a`, this constructs the function corresponding to the left tree of
 `a`. -/
-def bracketingLeft {a : Fin (n + 1) → Fin (n + 1)} (ha : a.IsBracketing) :
-    Fin ha.rootIndex → Fin ha.rootIndex :=
+def bracketingLeft : Fin ha.rootIndex → Fin ha.rootIndex :=
   fun i ↦ ⟨a (i.castLE ha.rootIndex.isLt.le), by
     by_contra hik
     have hpi : a (i.castLE ha.rootIndex.isLt.le) = n := by
@@ -185,24 +208,20 @@ def bracketingLeft {a : Fin (n + 1) → Fin (n + 1)} (ha : a.IsBracketing) :
         apply_rootIndex ha]
     exact absurd (rootIndex_le ha hpi) (Fin.not_le.mpr i.isLt)⟩
 
-lemma isBracketing_bracketingLeft {a : Fin (n + 1) → Fin (n + 1)}
-    (ha : a.IsBracketing) : (bracketingLeft ha).IsBracketing :=
+lemma isBracketing_bracketingLeft : (bracketingLeft ha).IsBracketing :=
   have h : ha.rootIndex ≤ n + 1 := ha.rootIndex.isLt.le
   ⟨fun i ↦ ha.1 (i.castLE h), fun i j hij hja ↦ ha.2 (i.castLE h) (j.castLE h) hij hja⟩
 
-@[simp] lemma val_bracketingLeft {a : Fin (n + 1) → Fin (n + 1)} (ha : a.IsBracketing)
-    (i : Fin ha.rootIndex) :
+@[simp] lemma val_bracketingLeft (i : Fin ha.rootIndex) :
     (bracketingLeft ha i : ℕ) = (a (i.castLE ha.rootIndex.isLt.le) : ℕ) := rfl
 
 /-- Given a bracketing function `a`, this constructs the function corresponding to the right tree
 of `a`. -/
-def bracketingRight {a : Fin (n + 1) → Fin (n + 1)} (ha : a.IsBracketing) :
-    Fin (n - ha.rootIndex) → Fin (n - ha.rootIndex) :=
+def bracketingRight : Fin (n - ha.rootIndex) → Fin (n - ha.rootIndex) :=
   fun i ↦ ⟨(a ((i.natAdd (ha.rootIndex + 1)).cast (by omega)) : ℕ) - (ha.rootIndex + 1), by
     grind [ha.1 ((i.natAdd (ha.rootIndex + 1)).cast (by omega))]⟩
 
-lemma isBracketing_bracketingRight {a : Fin (n + 1) → Fin (n + 1)}
-    (ha : a.IsBracketing) : (bracketingRight ha).IsBracketing := by
+lemma isBracketing_bracketingRight : (bracketingRight ha).IsBracketing := by
   constructor
   · intro i
     change (i : ℕ) ≤ a ((i.natAdd (ha.rootIndex + 1)).cast (by omega)) - (ha.rootIndex + 1)
@@ -217,19 +236,12 @@ lemma isBracketing_bracketingRight {a : Fin (n + 1) → Fin (n + 1)}
        ≤ (a ((i.natAdd (ha.rootIndex + 1)).cast (by omega)) : ℕ) - (ha.rootIndex + 1)
     omega
 
-@[simp] lemma val_bracketingRight {a : Fin (n + 1) → Fin (n + 1)} (ha : a.IsBracketing)
-    (i : Fin (n - ha.rootIndex)) : (bracketingRight ha i : ℕ)
+@[simp] lemma val_bracketingRight (i : Fin (n - ha.rootIndex)) : (bracketingRight ha i : ℕ)
     = (a ((i.natAdd (ha.rootIndex + 1)).cast (by omega)) : ℕ) - (ha.rootIndex + 1) := rfl
 
-lemma isBracketing_cast {k : Fin (n + 1)} {b : Fin k → Fin k}
-    {c : Fin (n - k) → Fin (n - k)} (hb : b.IsBracketing) (hc : c.IsBracketing) :
-    ((fun i ↦ Fin.cast (show k + (n - k) + 1 = n + 1 by omega)
-    (bracketingNode b c (Fin.cast (show n + 1 = k + (n - k) + 1 by omega) i)))).IsBracketing := by
-  have hkn : k + (n - k) + 1 = n + 1 := by omega
-  have hbc := isBracketing_bracketingNode hb hc
-  refine ⟨fun i ↦ ?_, fun i j hij hja ↦ ?_⟩
-  · simpa using hbc.1 (Fin.cast hkn.symm i)
-  · simpa using hbc.2 (Fin.cast hkn.symm i) (Fin.cast hkn.symm j) (by simpa) (by simpa)
+end leftright
+
+section catalan
 
 lemma bracket_pair_heq {k l : ℕ} (hkl : k = l) {b' : Fin k → Fin k}
     {c' : Fin (n - k) → Fin (n - k)} {b : Fin l → Fin l} {c : Fin (n - l) → Fin (n - l)}
@@ -244,10 +256,12 @@ lemma bracket_pair_heq {k l : ℕ} (hkl : k = l) {b' : Fin k → Fin k}
   have hce := funext fun i => Fin.ext (hcc i i rfl)
   simp [hbe, hce]
 
+variable (n : ℕ)
+
 /-- The Catalan recursion bijection between bracketing functions on `Fin (n + 1)` and the disjoint
 union of all possible splits of bracketing functions on `Fin k` times bracketing functions on
 `Fin (n - k)`. -/
-def bracketingFunctionsSuccEquiv (n : ℕ) : bracketingFunctions (n + 1) ≃ Σ k : Fin (n + 1),
+def bracketingFunctionsSuccEquiv : bracketingFunctions (n + 1) ≃ Σ k : Fin (n + 1),
     bracketingFunctions k ×ˢ bracketingFunctions (n - k) where
   toFun := fun ⟨a, hmem⟩ ↦
     let ha := mem_bracketingFunctions.mp hmem
@@ -290,12 +304,16 @@ def bracketingFunctionsSuccEquiv (n : ℕ) : bracketingFunctions (n + 1) ≃ Σ 
     · grind [bracketingRight, bracketingNode]
 
 /-- The number of bracketing functions of size `n` is given by the `n`th Catalan number. -/
-theorem bracketingFunctions_card (n : ℕ) : (bracketingFunctions n).card = catalan n := by
+theorem bracketingFunctions_card : (bracketingFunctions n).card = catalan n := by
   induction n using Nat.case_strong_induction_on with
   | hz => rw [catalan_zero]; decide
   | hi n _ =>
     grind [Fintype.card_congr (bracketingFunctionsSuccEquiv n), Fintype.card_sigma,
       Finset.card_product, Fintype.card_coe, catalan_succ]
+
+end catalan
+
+section lattice
 
 instance : SemilatticeInf (bracketingFunctions n) where
   inf := fun a b ↦ ⟨fun i ↦ a.1 i ⊓ b.1 i, by grind [mem_bracketingFunctions, IsBracketing]⟩
@@ -338,7 +356,7 @@ lemma le_bracketingClosure (a : Fin n → Fin n) :
 /-- `bracketingClosure` is left adjoint to the inclusion of bracketing functions into all functions
 `Fin n → Fin n`, exhibiting the bracketing functions as the closed elements of a closure operator.
 -/
-def bracketingGI : GaloisInsertion (bracketingClosure (n := n)) (fun b ↦ (b : Fin n → Fin n)) where
+def bracketingGI : GaloisInsertion bracketingClosure ((↑·) : bracketingFunctions n → _) where
   choice a h := ⟨a, mem_bracketingFunctions.mpr (by
     rw [le_antisymm (le_bracketingClosure a) h]
     exact mem_bracketingFunctions.mp (bracketingClosure a).2)⟩
@@ -359,3 +377,5 @@ example : ¬ ∀ x y z : bracketingFunctions 3, x ⊓ (y ⊔ z) = (x ⊓ y) ⊔ 
   have := h ⟨![2,1,2], by decide⟩ ⟨![0,2,2], by decide⟩ ⟨![1,1,2], by decide⟩
   revert this
   decide
+
+end lattice
