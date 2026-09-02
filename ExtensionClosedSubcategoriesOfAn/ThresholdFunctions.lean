@@ -1,4 +1,5 @@
 import ExtensionClosedSubcategoriesOfAn.BracketingFunctions
+import ExtensionClosedSubcategoriesOfAn.CountingExtensionClosed
 
 def Function.IsThreshold {n : ℕ} (h : Fin n → Fin n) : Prop :=
 (∀i, h i ≤ n - (i.val + 1)) ∧
@@ -39,3 +40,10 @@ def Threshold_equiv_Bracketing (n : ℕ) : ThresholdFunctions n ≃ bracketingFu
 
 theorem ThresholdFunctions_card (n : ℕ) : (ThresholdFunctions n).card = catalan n :=
   (Finset.card_eq_of_equiv (Threshold_equiv_Bracketing n)).trans (bracketingFunctions_card n)
+
+def Threshold_equiv_Extension_with_all_simples (n : ℕ) :
+ThresholdFunctions n ≃ ext_closed_sets_with_specified_number_projectives n (n + 1) :=
+{ toFun := fun h ↦ ⟨_,_⟩
+  invFun := fun R ↦ ⟨fun i ↦ _,_⟩
+  left_inv := by sorry
+  right_inv := by sorry}
