@@ -4,14 +4,14 @@ import Mathlib.Data.Finset.Prod
 open Finset
 
 def higher_nakayama_convention (n : ℕ) : Finset (ℕ × ℕ) :=
-  (Finset.product (range (n+1)) (range (n+1))).filter
+  (Finset.product (range (n + 1)) (range (n + 1))).filter
     (fun p => p.1 ≤ p.2 ∧ p.2 ≤ n)
 
 lemma mem_higher_nakayama_convention_iff (n : ℕ) (p : ℕ × ℕ) :
-  p ∈ higher_nakayama_convention n ↔
+    p ∈ higher_nakayama_convention n ↔
     p.1 ≤ p.2 ∧ p.2 ≤ n := by
   simp only [higher_nakayama_convention, product_eq_sprod, mem_filter, mem_product, mem_range]
-  omega
+  lia
 
 /-- A combinatorial condition for two interval modules `p` and `q` to have non-zero `Ext^1(p,q)`. -/
 def ext_interlace {n : ℕ} (p q : higher_nakayama_convention n) : Prop :=
@@ -102,8 +102,7 @@ def weak_long_extension {n : ℕ} {p q : higher_nakayama_convention n}
   rcases p with ⟨⟨a,b⟩,hp⟩
   rcases q with ⟨⟨c,d⟩,hq⟩
   rw [mem_higher_nakayama_convention_iff] at hp hq ⊢
-  rw [weak_ext_interlace] at hpq
-  grind
+  simp [*]
 
 def weak_short_extension {n : ℕ} {p q : higher_nakayama_convention n}
 (hshort : max p.1.1 q.1.1 ≤ min p.1.2 q.1.2) : higher_nakayama_convention n := by
@@ -118,43 +117,43 @@ lemma weak_long_extension_of_contains {n : ℕ} {p q : higher_nakayama_conventio
   grind
 
 lemma weak_long_extension_of_contains_rev {n : ℕ} {p q : higher_nakayama_convention n}
-  (hpq : weak_ext_interlace p q) (h : contains q p) : weak_long_extension hpq = q := by
+    (hpq : weak_ext_interlace p q) (h : contains q p) : weak_long_extension hpq = q := by
   simpa [weak_long_extension, max_comm, min_comm] using
   (weak_long_extension_of_contains ((weak_ext_interlace_comm p q).mp hpq) h)
 
 lemma weak_short_extension_of_contains {n : ℕ} {p q : higher_nakayama_convention n}
-  (hshort : max p.1.1 q.1.1 ≤ min p.1.2 q.1.2) (h : contains p q) :
-  weak_short_extension hshort = q := by
+    (hshort : max p.1.1 q.1.1 ≤ min p.1.2 q.1.2) (h : contains p q) :
+    weak_short_extension hshort = q := by
   simp only [contains] at h
   grind [weak_short_extension]
 
 lemma weak_short_extension_of_contains_rev {n : ℕ}
-  {p q : higher_nakayama_convention n} (hshort : max p.1.1 q.1.1 ≤ min p.1.2 q.1.2)
-  (h : contains q p) : weak_short_extension hshort = p := by
+    {p q : higher_nakayama_convention n} (hshort : max p.1.1 q.1.1 ≤ min p.1.2 q.1.2)
+    (h : contains q p) : weak_short_extension hshort = p := by
   simp only [contains] at h
   grind [weak_short_extension]
 
 lemma long_extension_eq_weak_long_extension {n : ℕ} {p q : higher_nakayama_convention n}
-  (hpq : ext_interlace p q) :
-  long_extension hpq = weak_long_extension (weak_interlace_of_interlace hpq) := by
+    (hpq : ext_interlace p q) :
+    long_extension hpq = weak_long_extension (weak_interlace_of_interlace hpq) := by
   rw [ext_interlace] at hpq
   grind [long_extension, weak_long_extension]
 
 lemma long_extension_eq_weak_long_extension_rev {n : ℕ} {p q : higher_nakayama_convention n}
-  (hqp : ext_interlace q p) :
-  long_extension hqp = weak_long_extension (weak_interlace_of_interlace_rev hqp) := by
+    (hqp : ext_interlace q p) :
+    long_extension hqp = weak_long_extension (weak_interlace_of_interlace_rev hqp) := by
   rw [ext_interlace] at hqp
   grind [long_extension, weak_long_extension]
 
 lemma short_extension_eq_weak_short_extension {n : ℕ} {p q : higher_nakayama_convention n}
-  (hpq : ext_interlace p q) (hshort : p.1.1 ≤ q.1.2) :
-  short_extension hshort = weak_short_extension (weak_short_of_short hpq hshort) := by
+    (hpq : ext_interlace p q) (hshort : p.1.1 ≤ q.1.2) :
+    short_extension hshort = weak_short_extension (weak_short_of_short hpq hshort) := by
   rw [ext_interlace] at hpq
   grind [short_extension, weak_short_extension]
 
 lemma short_extension_eq_weak_short_extension_rev {n : ℕ} {p q : higher_nakayama_convention n}
-  (hqp : ext_interlace q p) (hshort : q.1.1 ≤ p.1.2) :
-  short_extension hshort = weak_short_extension (weak_short_of_short_rev hqp hshort) := by
+    (hqp : ext_interlace q p) (hshort : q.1.1 ≤ p.1.2) :
+    short_extension hshort = weak_short_extension (weak_short_of_short_rev hqp hshort) := by
   rw [ext_interlace] at hqp
   grind [short_extension, weak_short_extension]
 
@@ -175,17 +174,17 @@ lemma strong_ext_closed_iff_weak_ext_closed {n : ℕ} (Y : Finset (higher_nakaya
     · -- The case `ext_interlace p q`
       constructor
       · rw [← long_extension_eq_weak_long_extension hpq']
-        exact (hstrong p hp q hq hpq').1
+        simp [*]
       · intro hshort
         rw [← short_extension_eq_weak_short_extension hpq' (short_of_weak_short hshort)]
-        exact (hstrong p hp q hq hpq').2 (short_of_weak_short hshort)
+        simp [*]
     · -- The case `ext_interlace q p`
       constructor
       · rw [← long_extension_eq_weak_long_extension_rev hpq']
-        exact (hstrong q hq p hp hpq').1
+        simp [*]
       · intro hshort
         rw [← short_extension_eq_weak_short_extension_rev hpq' (short_of_weak_short_rev hshort)]
-        exact (hstrong q hq p hp hpq').2 (short_of_weak_short_rev hshort)
+        simp [*]
     · -- The case `contains p q`
       constructor
       · rw [weak_long_extension_of_contains hpq hpq']
@@ -203,7 +202,7 @@ lemma strong_ext_closed_iff_weak_ext_closed {n : ℕ} (Y : Finset (higher_nakaya
   · intro hweak p hp q hq hpq
     constructor
     · rw [long_extension_eq_weak_long_extension hpq]
-      exact (hweak p hp q hq (weak_interlace_of_interlace hpq)).1
+      simp [*]
     · intro hshort
       rw [short_extension_eq_weak_short_extension hpq hshort]
       exact (hweak p hp q hq (weak_interlace_of_interlace hpq)).2 (weak_short_of_short hpq hshort)

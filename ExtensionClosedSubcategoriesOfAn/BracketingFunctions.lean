@@ -136,7 +136,7 @@ lemma lt_rootIndex {k : Fin (n + 1)} (hk : k < ha.rootIndex) :
     a k ≠ Fin.last n := fun h ↦ absurd (ha.rootIndex_le h) (not_le.mpr hk)
 
 lemma rootIndex_cast {m : ℕ} (h : n = m)
-    (ha' : (fun (i : Fin (m + 1)) ↦ Fin.cast (by omega) (a (Fin.cast (by omega) i))).IsBracketing) :
+    (ha' : (fun (i : Fin (m + 1)) ↦ Fin.cast (by lia) (a (Fin.cast (by lia) i))).IsBracketing) :
     (ha'.rootIndex : ℕ) = (ha.rootIndex : ℕ) := by subst h; congr 1
 
 end Function.IsBracketing
@@ -152,33 +152,33 @@ bracketing function on `Fin (k + l + 1)` with first `k` values given by `b`, mid
 `k + l` and last `l` values given by `c` shifted by `k + 1`. -/
 def bracketingNode : Fin (k + l + 1) → Fin (k + l + 1) :=
   fun i ↦
-    if h : i < k then ⟨b ⟨i, h⟩, by omega⟩
-    else if h' : i = k then ⟨k + l, by omega⟩
-    else ⟨c ⟨i - (k + 1), by omega⟩ + (k + 1), by omega⟩
+    if h : i < k then ⟨b ⟨i, h⟩, by lia⟩
+    else if h' : i = k then ⟨k + l, by simp [*]⟩
+    else ⟨c ⟨i - (k + 1), by lia⟩ + (k + 1), by lia⟩
 
 lemma bracketingNode_castLE (i : Fin k) :
-    bracketingNode b c (i.castLE (by omega)) = (b i).castLE (by omega) := by grind [bracketingNode]
+    bracketingNode b c (i.castLE (by lia)) = (b i).castLE (by lia) := by grind [bracketingNode]
 
 /-- On the first `k` indices, `bracketingNode b c` is given by `b`. -/
 @[simp] lemma bracketingNode_val_of_lt {i : ℕ} (h : i < k) :
-    (bracketingNode b c ⟨i, by omega⟩ : ℕ) = (b ⟨i, h⟩ : ℕ) :=
+    (bracketingNode b c ⟨i, by lia⟩ : ℕ) = (b ⟨i, h⟩ : ℕ) :=
   congrArg Fin.val (bracketingNode_castLE b c ⟨i, h⟩)
 
 /-- At the separating index `k`, `bracketingNode b c` takes the maximal value `k + l`. -/
-lemma bracketingNode_mid : (bracketingNode b c ⟨k, by omega⟩) = Fin.last (k + l) := by
+lemma bracketingNode_mid : (bracketingNode b c ⟨k, by lia⟩) = Fin.last (k + l) := by
   grind [bracketingNode]
 
-lemma bracketingNode_mid_val : (bracketingNode b c ⟨k, by omega⟩ : ℕ) = k + l :=
+lemma bracketingNode_mid_val : (bracketingNode b c ⟨k, by lia⟩ : ℕ) = k + l :=
   congrArg Fin.val (bracketingNode_mid b c)
 
 lemma bracketingNode_natAdd (i : Fin l) :
-    bracketingNode b c (Fin.cast (by omega) (i.natAdd (k + 1)))
-      = Fin.cast (by omega) ((c i).natAdd (k + 1)) := by
+    bracketingNode b c (Fin.cast (by lia) (i.natAdd (k + 1)))
+      = Fin.cast (by lia) ((c i).natAdd (k + 1)) := by
   grind [bracketingNode]
 
 /-- On the last `l` indices, `bracketingNode b c` is `c` shifted by `k + 1`. -/
 lemma bracketingNode_val_of_gt {t : ℕ} (ht : t < l) :
-    (bracketingNode b c ⟨k + 1 + t, by omega⟩ : ℕ) = (c ⟨t, ht⟩ + (k + 1) : ℕ) := by
+    (bracketingNode b c ⟨k + 1 + t, by lia⟩ : ℕ) = (c ⟨t, ht⟩ + (k + 1) : ℕ) := by
   grind [bracketingNode]
 
 lemma isBracketing_bracketingNode {b : Fin k → Fin k} {c : Fin l → Fin l}
@@ -188,8 +188,8 @@ lemma isBracketing_bracketingNode {b : Fin k → Fin k} {c : Fin l → Fin l}
     rcases lt_trichotomy i k with h | rfl | h
     · grind [bracketingNode_val_of_lt b c h, hb.self_le ⟨i,h⟩]
     · grind [bracketingNode_mid b c]
-    · obtain ⟨t, rfl⟩ : ∃ t, i = k + 1 + t := ⟨i - (k + 1), by omega⟩
-      grind [bracketingNode_val_of_gt, hc.self_le ⟨t, by omega⟩]
+    · obtain ⟨t, rfl⟩ : ∃ t, i = k + 1 + t := ⟨i - (k + 1), by lia⟩
+      grind [bracketingNode_val_of_gt, hc.self_le ⟨t, by lia⟩]
   · rintro ⟨i, hi⟩ ⟨j, hj⟩ hij hjbc
     simp only [Fin.le_def] at hij hjbc ⊢
     rcases lt_trichotomy i k with h | rfl | h
@@ -200,10 +200,10 @@ lemma isBracketing_bracketingNode {b : Fin k → Fin k} {c : Fin l → Fin l}
     · -- the case `i = k` so that `bracketingNode b c i` is `k + l`
       grind [bracketingNode_mid]
     · -- the case `i > k` so that `bracketingNode b c i` is `c (i - (k + 1)) + k + 1`
-      obtain ⟨s, rfl⟩ : ∃ s, i = k + 1 + s := ⟨i - (k + 1), by omega⟩
-      obtain ⟨t, rfl⟩ : ∃ t, j = k + 1 + t := ⟨j - (k + 1), by omega⟩
-      rw [bracketingNode_val_of_gt b c (by omega)] at hjbc
-      have := hc.apply_le ⟨s, (by omega)⟩ ⟨t, (by omega)⟩ (Fin.mk_le_mk.mpr (by omega)) (by grind)
+      obtain ⟨s, rfl⟩ : ∃ s, i = k + 1 + s := ⟨i - (k + 1), by lia⟩
+      obtain ⟨t, rfl⟩ : ∃ t, j = k + 1 + t := ⟨j - (k + 1), by lia⟩
+      rw [bracketingNode_val_of_gt b c (by lia)] at hjbc
+      have := hc.apply_le ⟨s, (by lia)⟩ ⟨t, (by lia)⟩ (Fin.mk_le_mk.mpr (by lia)) (by grind)
       grind [bracketingNode_val_of_gt]
 
 lemma Function.IsBracketing.rootIndex_bracketingNode {b : Fin k → Fin k} {c : Fin l → Fin l}
@@ -217,13 +217,13 @@ lemma Function.IsBracketing.rootIndex_bracketingNode {b : Fin k → Fin k} {c : 
 lemma Function.IsBracketing.cast {m : ℕ} (h : m = n) {a : Fin m → Fin m} (ha : a.IsBracketing) :
     (fun i ↦ Fin.cast h (a (Fin.cast h.symm i))).IsBracketing :=
   ⟨fun i ↦ by grind [ha.self_le (Fin.cast h.symm i)],
-   fun i j hij hja ↦ by simpa using ha.apply_le _ _ hij (Fin.le_def.mpr hja)⟩
+    fun i j hij hja ↦ by simpa using ha.apply_le _ _ hij (Fin.le_def.mpr hja)⟩
 
 lemma isBracketing_cast {k : Fin (n + 1)} {b : Fin k → Fin k} {c : Fin (n - k) → Fin (n - k)}
     (hb : b.IsBracketing) (hc : c.IsBracketing) :
-    (fun i ↦ Fin.cast (show k + (n - k) + 1 = n + 1 by omega)
-      (bracketingNode b c (Fin.cast (show n + 1 = k + (n - k) + 1 by omega) i))).IsBracketing :=
-  (isBracketing_bracketingNode hb hc).cast (by omega)
+    (fun i ↦ Fin.cast (show k + (n - k) + 1 = n + 1 by lia)
+      (bracketingNode b c (Fin.cast (show n + 1 = k + (n - k) + 1 by lia) i))).IsBracketing :=
+  (isBracketing_bracketingNode hb hc).cast (by lia)
 
 end node
 
@@ -250,24 +250,24 @@ lemma isBracketing_bracketingLeft : (bracketingLeft ha).IsBracketing :=
 /-- Given a bracketing function `a`, this constructs the function corresponding to the right tree
 of `a`. -/
 def bracketingRight : Fin (n - ha.rootIndex) → Fin (n - ha.rootIndex) :=
-  fun i ↦ ⟨(a ((i.natAdd (ha.rootIndex + 1)).cast (by omega)) : ℕ) - (ha.rootIndex + 1), by
-    grind [ha.self_le ((i.natAdd (ha.rootIndex + 1)).cast (by omega))]⟩
+  fun i ↦ ⟨(a ((i.natAdd (ha.rootIndex + 1)).cast (by lia)) : ℕ) - (ha.rootIndex + 1), by
+    grind [ha.self_le ((i.natAdd (ha.rootIndex + 1)).cast (by lia))]⟩
 
 lemma isBracketing_bracketingRight : (bracketingRight ha).IsBracketing := by
   constructor
   · intro i
     grind [Fin.val_le_of_ge, bracketingRight,
-      ha.self_le ((i.natAdd (ha.rootIndex + 1)).cast (by omega))]
+      ha.self_le ((i.natAdd (ha.rootIndex + 1)).cast (by lia))]
   · intro i j hij hja
     have hja : (j : ℕ)
-        ≤ a ((i.natAdd (ha.rootIndex + 1)).cast (by omega)) - (ha.rootIndex + 1) := hja
+        ≤ a ((i.natAdd (ha.rootIndex + 1)).cast (by lia)) - (ha.rootIndex + 1) := hja
     grind [Fin.val_le_of_ge, bracketingRight, ha.apply_le
-      (i := ((i.natAdd (ha.rootIndex + 1)).cast (by omega)))
-      (j := ((j.natAdd (ha.rootIndex + 1)).cast (by omega))) (by grind)
-      (by grind [ha.self_le ((i.natAdd (ha.rootIndex + 1)).cast (by omega))])]
+      (i := ((i.natAdd (ha.rootIndex + 1)).cast (by lia)))
+      (j := ((j.natAdd (ha.rootIndex + 1)).cast (by lia))) (by grind)
+      (by grind [ha.self_le ((i.natAdd (ha.rootIndex + 1)).cast (by lia))])]
 
 @[simp] lemma val_bracketingRight (i : Fin (n - ha.rootIndex)) : (bracketingRight ha i : ℕ)
-    = (a ((i.natAdd (ha.rootIndex + 1)).cast (by omega)) : ℕ) - (ha.rootIndex + 1) := rfl
+    = (a ((i.natAdd (ha.rootIndex + 1)).cast (by lia)) : ℕ) - (ha.rootIndex + 1) := rfl
 
 end leftright
 
@@ -282,7 +282,7 @@ private lemma bracket_pair_heq {k l : ℕ} (hkl : k = l)
   subst hkl
   have hbe : b' = b := Subtype.ext (funext fun i ↦ Fin.ext (hbb i i rfl))
   have hce : c' = c := Subtype.ext (funext fun i ↦ Fin.ext (hcc i i rfl))
-  rw [hbe, hce]
+  simp [*]
 
 variable (n : ℕ)
 
@@ -293,24 +293,24 @@ def bracketingFunctionsSuccEquiv : BracketingFunctions (n + 1) ≃ Σ k : Fin (n
     BracketingFunctions k × BracketingFunctions (n - k) where
   toFun := fun ⟨a, ha⟩ ↦
     ⟨ha.rootIndex,
-     ⟨bracketingLeft ha, isBracketing_bracketingLeft ha⟩,
-     ⟨bracketingRight ha, isBracketing_bracketingRight ha⟩⟩
+      ⟨bracketingLeft ha, isBracketing_bracketingLeft ha⟩,
+      ⟨bracketingRight ha, isBracketing_bracketingRight ha⟩⟩
   invFun := fun ⟨k, ⟨b, hb⟩, ⟨c, hc⟩⟩ ↦
-    ⟨fun i ↦ Fin.cast (by omega) (bracketingNode b c (Fin.cast (by omega) i)),
-     isBracketing_cast hb hc⟩
+    ⟨fun i ↦ Fin.cast (by lia) (bracketingNode b c (Fin.cast (by lia) i)),
+      isBracketing_cast hb hc⟩
   left_inv := by
     rintro ⟨a, ha⟩
     ext ⟨i, hi⟩
     rcases Nat.lt_trichotomy i ha.rootIndex with h | rfl | h
     · simp [bracketingNode_val_of_lt _ _ h]
     · grind [Fin.cast_mk, bracketingNode_mid_val, ha.apply_rootIndex]
-    · obtain ⟨t, rfl⟩ : ∃ t, i = ha.rootIndex + 1 + t := ⟨i - (ha.rootIndex + 1), by omega⟩
-      simp [bracketingNode_val_of_gt _ _ (show t < n - ha.rootIndex by omega)]
+    · obtain ⟨t, rfl⟩ : ∃ t, i = ha.rootIndex + 1 + t := ⟨i - (ha.rootIndex + 1), by lia⟩
+      simp [bracketingNode_val_of_gt _ _ (show t < n - ha.rootIndex by lia)]
       grind [ha.self_le ⟨ha.rootIndex + 1 + t, hi⟩]
   right_inv := by
     rintro ⟨k, ⟨b, hb⟩, ⟨c, hc⟩⟩
     have hk : ((isBracketing_cast hb hc).rootIndex : ℕ) = k :=
-      ((isBracketing_bracketingNode hb hc).rootIndex_cast (by omega) _).trans
+      ((isBracketing_bracketingNode hb hc).rootIndex_cast (by lia) _).trans
         (Function.IsBracketing.rootIndex_bracketingNode hb hc)
     simp only [Sigma.mk.injEq]
     refine ⟨Fin.ext hk, ?_⟩
@@ -338,7 +338,7 @@ instance : SemilatticeInf (BracketingFunctions n) where
   le_inf := fun a b c hab hac i ↦ le_inf (hab i) (hac i)
 
 instance : OrderTop (BracketingFunctions n) where
-  top := ⟨fun i ↦ ⟨n - 1, by have := i.isLt; omega⟩, by
+  top := ⟨fun i ↦ ⟨n - 1, by have := i.isLt; lia⟩, by
     grind [Function.IsBracketing]⟩
   le_top := by intro a i; grind
 
@@ -363,7 +363,7 @@ lemma le_bracketingClosure (a : Fin n → Fin n) :
   refine Finset.inf_induction (p := fun c : BracketingFunctions n ↦ a ≤ c) ?_ ?_ ?_
   · intro i
     change (a i : ℕ) ≤ (n - 1 : ℕ)
-    omega
+    lia
   · intro x hx y hy i
     exact le_inf (hx i) (hy i)
   · intro b hb
@@ -388,7 +388,7 @@ instance instLatticeBracketingFunctions : Lattice (BracketingFunctions n) where
 -- The Tamari lattice is not distributive.
 example : ¬ ∀ x y z : BracketingFunctions 3, x ⊓ (y ⊔ z) = (x ⊓ y) ⊔ (x ⊓ z) := by
   intro h
-  have := h ⟨![2,1,2], by decide⟩ ⟨![0,2,2], by decide⟩ ⟨![1,1,2], by decide⟩
+  have := h ⟨![2, 1, 2], by decide⟩ ⟨![0, 2, 2], by decide⟩ ⟨![1, 1, 2], by decide⟩
   revert this
   decide
 
