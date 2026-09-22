@@ -1,5 +1,15 @@
+/-
+Copyright (c) 2026 Julian Kuelshammer. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Julian Kuelshammer
+-/
+
 import ExtensionClosedSubcategoriesOfAn.BracketingFunctions
 import ExtensionClosedSubcategoriesOfAn.CountingExtensionClosed
+
+/-!
+# Threshold functions
+-/
 
 def Function.IsThreshold {n : ℕ} (h : Fin n → Fin n) : Prop :=
 (∀i, h i ≤ n - (i.val + 1)) ∧

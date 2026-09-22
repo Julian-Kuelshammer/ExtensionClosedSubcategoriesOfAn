@@ -1,5 +1,15 @@
+/-
+Copyright (c) 2026 Julian Kuelshammer. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Julian Kuelshammer
+-/
+
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Finset.Prod
+
+/-!
+# Extension-closed subcategories of A_n
+-/
 
 open Finset
 

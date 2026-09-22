@@ -1,9 +1,19 @@
+/-
+Copyright (c) 2026 Julian Kuelshammer. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Julian Kuelshammer
+-/
+
 import ExtensionClosedSubcategoriesOfAn.ExtensionClosed
 import Mathlib.Data.Finset.Powerset
 import Mathlib.Data.Fintype.Card
 import Mathlib.Data.Finset.Basic
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Order.Interval.Finset.Nat
+
+/-!
+# Counting extension-closed subcategories
+-/
 
 instance {n : ℕ} (p q : higher_nakayama_convention n) : Decidable (ext_interlace p q) := by
   unfold ext_interlace
@@ -152,7 +162,8 @@ def nonInjectives (n : ℕ) : Finset (higher_nakayama_convention n) :=
 /-- The (combinatorial) AR-translate which defines a bijection between non-projective and
 non-injective modules. -/
 def AR_translate (n : ℕ) : nonProjectives n ≃ nonInjectives n :=
-  { toFun := fun p ↦ ⟨⟨(p.1.1.1-1, p.1.1.2-1), by grind [mem_higher_nakayama_convention_iff]⟩, by
+  { toFun := fun p ↦ ⟨⟨(p.1.1.1 - 1, p.1.1.2 - 1),
+                          by grind [mem_higher_nakayama_convention_iff]⟩, by
                           grind [mem_higher_nakayama_convention_iff, nonProjectives, nonInjectives]⟩
     invFun := fun p ↦ ⟨⟨(p.1.1.1+1, p.1.1.2+1), by
                           grind [mem_higher_nakayama_convention_iff, nonInjectives]⟩, by
@@ -193,8 +204,9 @@ lemma hshort_NP_iff {n : ℕ} (p q : nonProjectives (n + 1)) :
   grind [NonProjective_equiv_convention]
 
 lemma long_extension_equiv {n : ℕ} {p q : nonProjectives (n + 1)} (hpq : ext_interlace p.1 q.1) :
-  NonProjective_equiv_convention n ⟨long_extension hpq, by grind [nonProjectives, long_extension]⟩ =
-    long_extension ((ext_interlace_NP_iff p q).mpr hpq) := by
+    NonProjective_equiv_convention n
+        ⟨long_extension hpq, by grind [nonProjectives, long_extension]⟩ =
+      long_extension ((ext_interlace_NP_iff p q).mpr hpq) := by
   simp [NonProjective_equiv_convention, long_extension]
 
 lemma short_extension_equiv {n : ℕ} {p q : nonProjectives (n + 1)} (hshort : p.1.1.1 ≤ q.1.1.2) :
